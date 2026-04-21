@@ -100,8 +100,14 @@ def _parse_args():
     parser.add_argument(
         "--max-delta",
         type=float,
-        default=1.4,
+        default=0.7,
         help="Maximum allowed per-joint return distance in radians unless --force is passed.",
+    )
+    parser.add_argument(
+        "--max-speed",
+        type=float,
+        default=0.25,
+        help="Maximum implied per-joint return speed in rad/s unless --force is passed.",
     )
     parser.add_argument("--wait-timeout", type=float, default=10.0, help="Seconds to wait for ROS interfaces.")
     parser.add_argument(
@@ -128,6 +134,9 @@ def main():
 
     try:
         target_positions, saved_joint_names = _load_state(state_path)
+        if args.duration <= 0.0:
+            raise ValueError("--duration must be positive")
+
         node.wait_for_current_state(args.wait_timeout)
         assert node.current is not None
 
@@ -150,16 +159,23 @@ def main():
 
         deltas = {name: abs(target_positions[name] - node.current[name]) for name in joint_names}
         max_delta = max(deltas.values()) if deltas else 0.0
+        max_speed = max_delta / args.duration
 
         print(f"State file: {state_path}")
         print(f"Controller: {args.controller_action}")
         print(f"Joints: {', '.join(joint_names)}")
         print(f"Max return delta: {max_delta:.4f} rad")
+        print(f"Max implied speed: {max_speed:.4f} rad/s over {args.duration:.1f}s")
 
         if max_delta > args.max_delta and not args.force:
             raise RuntimeError(
                 f"Max joint delta {max_delta:.4f} rad exceeds --max-delta {args.max_delta:.4f}. "
                 "Inspect the robot and rerun with --force only if this is intentional."
+            )
+        if max_speed > args.max_speed and not args.force:
+            raise RuntimeError(
+                f"Max implied joint speed {max_speed:.4f} rad/s exceeds --max-speed {args.max_speed:.4f}. "
+                "Increase --duration, inspect the robot, or rerun with --force only if this is intentional."
             )
 
         if not args.execute:

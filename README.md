@@ -18,6 +18,8 @@ gripper.
 
 - 6-DoF SpaceMouse input via `spacenavd` and `ros-humble-spacenav`
 - `geometry_msgs/TwistStamped` bridge into `/servo_node/delta_twist_cmds`
+- Deadman button gating: by default, hold SpaceMouse button `0` before motion
+  commands are forwarded
 - Optional Flexiv-GN01 open/close button bridge
 - ZED 2i fixed RGB publishing through the standard ROS `v4l2_camera` driver
 - Session restore tools that save the start joint state and optionally return to it
@@ -93,6 +95,9 @@ In a second terminal:
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_spacemouse_bridge.sh enable_gripper:=false
 ```
 
+By default the bridge is armed only while SpaceMouse button `0` is held. Release
+that button and the bridge publishes zero twist.
+
 Start the ZED 2i fixed RGB stream in another terminal:
 
 ```bash
@@ -111,12 +116,14 @@ echo "$STATE_FILE"
 At the end of teleoperation, return to that pose before shutting down:
 
 ```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/restore_start_state.sh "$STATE_FILE"
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/restore_start_state.sh "$STATE_FILE" --execute
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/stop_ros_stack.sh
 ```
 
 The restore command moves the robot, so it requires the explicit `--execute`
-flag. Without that flag it only prints a dry-run summary.
+flag. Without that flag it only prints a dry-run summary. It also refuses large
+joint deltas or fast implied return speeds unless `--force` is explicitly used.
 
 For real hardware, read the safety checklist first:
 
@@ -164,8 +171,9 @@ before real hardware, keep the emergency stop reachable, set conservative speed
 scales, and verify axis signs away from people and fragile objects.
 
 The default bridge clamps unitless Servo commands to `[-1, 1]` and publishes
-zero commands if SpaceMouse input becomes stale. These protections are helpful,
-but they are not a substitute for a trained operator.
+zero commands if SpaceMouse input becomes stale or the deadman button is not
+held. These protections are helpful, but they are not a substitute for a trained
+operator.
 
 ## Citation
 

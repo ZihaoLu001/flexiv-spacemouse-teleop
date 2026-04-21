@@ -6,6 +6,7 @@ from __future__ import annotations
 import rclpy
 from geometry_msgs.msg import Twist, TwistStamped
 from rclpy.node import Node
+from sensor_msgs.msg import Joy
 
 
 class SpaceMouseToServo(Node):
@@ -17,6 +18,9 @@ class SpaceMouseToServo(Node):
         self.declare_parameter("publish_hz", 50.0)
         self.declare_parameter("frame_id", "")
         self.declare_parameter("input_timeout", 0.25)
+        self.declare_parameter("enable_topic", "/spacenav/joy")
+        self.declare_parameter("require_enable_button", True)
+        self.declare_parameter("enable_button_idx", 0)
 
         # MoveIt Servo config in flexiv_ros2 humble-v1.7 uses unitless commands.
         self.declare_parameter("linear_scale", 0.20)
@@ -36,6 +40,9 @@ class SpaceMouseToServo(Node):
         self.publish_hz = float(self.get_parameter("publish_hz").value)
         self.frame_id = self.get_parameter("frame_id").value
         self.input_timeout = float(self.get_parameter("input_timeout").value)
+        self.enable_topic = self.get_parameter("enable_topic").value
+        self.require_enable_button = bool(self.get_parameter("require_enable_button").value)
+        self.enable_button_idx = int(self.get_parameter("enable_button_idx").value)
         self.linear_scale = float(self.get_parameter("linear_scale").value)
         self.angular_scale = float(self.get_parameter("angular_scale").value)
         self.deadband = float(self.get_parameter("deadband").value)
@@ -50,14 +57,21 @@ class SpaceMouseToServo(Node):
 
         self.latest = Twist()
         self.last_input_time = None
+        self.enable_button_pressed = not self.require_enable_button
 
         self.create_subscription(Twist, self.input_topic, self.twist_cb, 10)
+        if self.require_enable_button:
+            self.create_subscription(Joy, self.enable_topic, self.joy_cb, 10)
         self.pub = self.create_publisher(TwistStamped, self.output_topic, 10)
         self.create_timer(1.0 / self.publish_hz, self.timer_cb)
 
         self.get_logger().info(
             f"Publishing SpaceMouse twist to {self.output_topic} at {self.publish_hz:.1f} Hz"
         )
+        if self.require_enable_button:
+            self.get_logger().info(
+                f"Deadman enabled: hold button {self.enable_button_idx} on {self.enable_topic} to command motion"
+            )
 
     def _apply(self, value: float, scale: float, sign: float) -> float:
         if abs(value) < self.deadband:
@@ -69,6 +83,12 @@ class SpaceMouseToServo(Node):
         self.latest = msg
         self.last_input_time = self.get_clock().now()
 
+    def joy_cb(self, msg: Joy) -> None:
+        if self.enable_button_idx < 0 or self.enable_button_idx >= len(msg.buttons):
+            self.enable_button_pressed = False
+            return
+        self.enable_button_pressed = msg.buttons[self.enable_button_idx] == 1
+
     def _input_is_stale(self) -> bool:
         if self.last_input_time is None:
             return True
@@ -76,7 +96,7 @@ class SpaceMouseToServo(Node):
         return age > self.input_timeout
 
     def timer_cb(self) -> None:
-        msg = Twist() if self._input_is_stale() else self.latest
+        msg = Twist() if self._input_is_stale() or not self.enable_button_pressed else self.latest
 
         out = TwistStamped()
         out.header.stamp = self.get_clock().now().to_msg()
@@ -103,4 +123,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

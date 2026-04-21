@@ -4,6 +4,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 import os
 
@@ -16,6 +17,8 @@ def generate_launch_description():
     servo_twist_topic = LaunchConfiguration("servo_twist_topic")
     frame_id = LaunchConfiguration("frame_id")
     enable_gripper = LaunchConfiguration("enable_gripper")
+    require_enable_button = LaunchConfiguration("require_enable_button")
+    enable_button_idx = LaunchConfiguration("enable_button_idx")
     start_spacenav_node = LaunchConfiguration("start_spacenav_node")
 
     return LaunchDescription(
@@ -37,8 +40,18 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "enable_gripper",
-                default_value="true",
+                default_value="false",
                 description="Start the SpaceMouse button to GN01 gripper bridge.",
+            ),
+            DeclareLaunchArgument(
+                "require_enable_button",
+                default_value="true",
+                description="Require holding a SpaceMouse button before forwarding motion commands.",
+            ),
+            DeclareLaunchArgument(
+                "enable_button_idx",
+                default_value="0",
+                description="SpaceMouse button index used as the motion deadman.",
             ),
             DeclareLaunchArgument(
                 "start_spacenav_node",
@@ -62,6 +75,8 @@ def generate_launch_description():
                     {
                         "output_topic": servo_twist_topic,
                         "frame_id": frame_id,
+                        "require_enable_button": ParameterValue(require_enable_button, value_type=bool),
+                        "enable_button_idx": ParameterValue(enable_button_idx, value_type=int),
                     },
                 ],
             ),
@@ -75,4 +90,3 @@ def generate_launch_description():
             ),
         ]
     )
-

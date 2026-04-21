@@ -48,6 +48,8 @@ scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh enable_gripper:=false
 ```
 
+默认需要按住 SpaceMouse 的 0 号按钮才会转发运动命令；松开按钮会发布零速度。
+
 ## 真机
 
 真机前先确认急停、工作空间和 Remote Mode。
@@ -65,7 +67,6 @@ scripts/run_real_moveit_servo.sh
 
 ```bash
 scripts/start_servo.sh
-scripts/run_spacemouse_bridge.sh
 ```
 
 开始动机械臂之前，保存本次 teleop 的起始关节状态：
@@ -74,6 +75,14 @@ scripts/run_spacemouse_bridge.sh
 STATE_FILE=$(scripts/save_start_state.sh)
 echo "$STATE_FILE"
 ```
+
+第一次真机建议先禁用 gripper 按钮，只测机械臂：
+
+```bash
+scripts/run_spacemouse_bridge.sh enable_gripper:=false
+```
+
+按住 SpaceMouse 0 号按钮才会动；感觉不对立刻松手。
 
 ## 录 demos
 
@@ -106,6 +115,7 @@ scripts/record_demo.sh
 结束 teleop 时，先让机械臂回到刚才保存的起始关节状态，再停 ROS stack：
 
 ```bash
+scripts/restore_start_state.sh "$STATE_FILE"
 scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh
 ```
@@ -113,4 +123,5 @@ scripts/stop_ros_stack.sh
 注意：这个命令会让机械臂运动，所以必须显式写 `--execute`。如果不加
 `--execute`，它只会打印 dry run 信息。默认只恢复 `joint1` 到 `joint7`
 这类机械臂关节，不会把 gripper joints 发给 arm controller。它恢复的是机械臂关节位置，
-不会恢复桌面物体、线缆、相机位置或被夹住的物体。
+不会恢复桌面物体、线缆、相机位置或被夹住的物体。默认还会拒绝过大的回程关节差和过快的回程速度；
+只有你检查过现场后才应该显式加 `--force`。

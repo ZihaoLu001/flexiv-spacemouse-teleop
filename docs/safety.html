@@ -44,6 +44,7 @@
           <li>The owner machine can ping the robot.</li>
           <li>No stale ROS control processes are running.</li>
           <li>SpaceMouse motion has been tested in fake hardware.</li>
+          <li>The SpaceMouse deadman behavior has been tested: hold button <code>0</code> to move, release it to command zero twist.</li>
           <li>Speed scales are conservative.</li>
           <li>A second person knows the robot is about to move if the lab requires it.</li>
         </ul>
@@ -51,6 +52,7 @@
         <h2>During Operation</h2>
         <ul>
           <li>Keep one hand near the emergency stop.</li>
+          <li>Keep the SpaceMouse deadman button released unless you intend to move.</li>
           <li>Start with small SpaceMouse deflections.</li>
           <li>Verify each translation axis before using rotation.</li>
           <li>Verify gripper buttons with no object before grasping.</li>
@@ -60,6 +62,7 @@
         <h2>After Operation</h2>
         <ul>
           <li>Stop recording.</li>
+          <li>Dry-run <code>scripts/restore_start_state.sh "$STATE_FILE"</code> before executing a return-to-start motion.</li>
           <li>Stop teleop launch processes.</li>
           <li>Save ROS logs if there was an anomaly.</li>
           <li>Return the robot to a safe pose according to lab policy.</li>
@@ -67,10 +70,10 @@
 
         <h2>Limits of This Package</h2>
         <div class="callout">
-          The bridge clamps commands and zeroes stale input. It does not enforce
-          lab workspace boundaries, human detection, task-level constraints, or
-          force limits. Those remain the responsibility of the robot controller,
-          lab procedures, and operator.
+          The bridge clamps commands and zeroes stale input or missing deadman
+          input. It does not enforce lab workspace boundaries, human detection,
+          task-level constraints, or force limits. Those remain the
+          responsibility of the robot controller, lab procedures, and operator.
         </div>
       </article>
     </main>

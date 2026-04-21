@@ -67,6 +67,10 @@ scripts/run_fake_moveit_servo.sh</code></pre>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh enable_gripper:=false</code></pre>
+        <p>
+          Hold SpaceMouse button <code>0</code> while moving. Releasing the
+          button sends zero twist commands.
+        </p>
 
         <h3>Terminal 3</h3>
         <pre><code>ros2 topic echo /servo_node/delta_twist_cmds</code></pre>
@@ -86,20 +90,26 @@ scripts/run_spacemouse_bridge.sh enable_gripper:=false</code></pre>
 
         <h3>Initialize the GN01 gripper once after controller power-cycle</h3>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-export ROBOT_SN=Rizon4s-123456
+export ROBOT_SN=&lt;your robot serial&gt;
 export RIZON_TYPE=Rizon4s
 python3 scripts/init_gn01_once.py</code></pre>
 
         <h3>Start robot, MoveIt, and Servo</h3>
         <pre><code>scripts/run_real_moveit_servo.sh</code></pre>
 
-        <h3>Start Servo and SpaceMouse in another terminal</h3>
-        <pre><code>scripts/start_servo.sh
-scripts/run_spacemouse_bridge.sh</code></pre>
+        <h3>Start Servo in another terminal</h3>
+        <pre><code>scripts/start_servo.sh</code></pre>
 
         <h3>Save the return target before moving the arm</h3>
         <pre><code>STATE_FILE=$(scripts/save_start_state.sh)
 echo "$STATE_FILE"</code></pre>
+
+        <h3>Start SpaceMouse with gripper disabled for the first real run</h3>
+        <pre><code>scripts/run_spacemouse_bridge.sh enable_gripper:=false</code></pre>
+        <p>
+          Hold SpaceMouse button <code>0</code> while commanding motion. Release
+          it immediately if anything feels wrong.
+        </p>
 
         <h2>Axis Tuning</h2>
         <p>If an axis feels reversed, edit <code>config/spacemouse_teleop.yaml</code>:</p>
@@ -129,6 +139,7 @@ scripts/record_demo.sh</code></pre>
         <h2>Restore After Teleoperation</h2>
         <p>Restore while the robot driver and controller are still running:</p>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/restore_start_state.sh "$STATE_FILE"
 scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh</code></pre>
         <div class="callout">
@@ -138,7 +149,9 @@ scripts/stop_ros_stack.sh</code></pre>
           restores only arm joints matching <code>joint1</code> through
           <code>joint7</code>, so gripper joints are not sent to the arm
           controller. It restores the arm joint position, not objects, cables,
-          camera poses, or grasped items.
+          camera poses, or grasped items. It also refuses large joint deltas or
+          fast implied return speeds unless the operator explicitly passes
+          <code>--force</code> after inspecting the robot.
         </div>
       </article>
     </main>

@@ -40,6 +40,9 @@ scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh enable_gripper:=false
 ```
 
+Hold SpaceMouse button `0` while moving. Releasing the button sends zero twist
+commands.
+
 Terminal 3:
 
 ```bash
@@ -63,7 +66,7 @@ ping 192.168.100.1
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-export ROBOT_SN=Rizon4s-123456
+export ROBOT_SN=<your robot serial>
 export RIZON_TYPE=Rizon4s
 python3 scripts/init_gn01_once.py
 ```
@@ -78,7 +81,6 @@ scripts/run_real_moveit_servo.sh
 
 ```bash
 scripts/start_servo.sh
-scripts/run_spacemouse_bridge.sh
 ```
 
 8. Save the return target before moving the arm:
@@ -87,6 +89,15 @@ scripts/run_spacemouse_bridge.sh
 STATE_FILE=$(scripts/save_start_state.sh)
 echo "$STATE_FILE"
 ```
+
+9. Start the SpaceMouse bridge with gripper disabled for the first real run:
+
+```bash
+scripts/run_spacemouse_bridge.sh enable_gripper:=false
+```
+
+Hold SpaceMouse button `0` while commanding motion. Release it immediately if
+anything feels wrong.
 
 ## Axis Tuning
 
@@ -153,6 +164,7 @@ Restore while the robot driver and controller are still running:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/restore_start_state.sh "$STATE_FILE"
 scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh
 ```
@@ -163,4 +175,5 @@ it moves the robot; without `--execute`, it prints a dry-run summary. By
 default it restores only arm joints matching `joint1` through `joint7`, so
 gripper joints are not sent to the arm controller. This restores the arm joint
 position, not the positions of objects, cables, cameras, or the gripper grasped
-object.
+object. It also refuses large joint deltas or fast implied return speeds unless
+the operator explicitly passes `--force` after inspecting the robot.

@@ -5,6 +5,9 @@ spacemouse_to_servo:
     publish_hz: 50.0
     frame_id: ""
     input_timeout: 0.25
+    enable_topic: /spacenav/joy
+    require_enable_button: true
+    enable_button_idx: 0
     linear_scale: 0.20
     angular_scale: 0.40
     deadband: 0.02
@@ -27,4 +30,3 @@ spacemouse_gn01:
     velocity: 0.10
     max_force: 20.0
     server_wait_timeout: 0.5
-
