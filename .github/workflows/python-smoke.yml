@@ -1,0 +1,23 @@
+name: smoke
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Python syntax
+        run: |
+          python -m py_compile \
+            flexiv_spacemouse_teleop/spacemouse_to_servo.py \
+            flexiv_spacemouse_teleop/spacemouse_gn01.py \
+            scripts/init_gn01_once.py
+      - name: Shell syntax
+        run: bash -n scripts/*.sh
+

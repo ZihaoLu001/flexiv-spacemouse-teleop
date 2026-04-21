@@ -1,0 +1,151 @@
+# Flexiv SpaceMouse Teleop
+
+[![ROS 2 Humble](https://img.shields.io/badge/ROS%202-Humble-22314e)](https://docs.ros.org/en/humble/)
+[![Ubuntu 22.04](https://img.shields.io/badge/Ubuntu-22.04-e95420)](https://releases.ubuntu.com/22.04/)
+[![MoveIt Servo](https://img.shields.io/badge/MoveIt-Servo-45a29e)](https://moveit.picknik.ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+SpaceMouse teleoperation bridge for Flexiv Rizon arms using ROS 2 Humble,
+`flexiv_ros2`, and MoveIt Servo.
+
+This repository is intentionally small: it does not vendor Flexiv SDKs or robot
+descriptions. Clone it into a ROS 2 workspace that already contains
+`flexiv_ros2` `humble-v1.7`, then use a SpaceMouse to stream Cartesian twist
+commands into MoveIt Servo and map SpaceMouse buttons to the Flexiv-GN01
+gripper.
+
+## What This Gives You
+
+- 6-DoF SpaceMouse input via `spacenavd` and `ros-humble-spacenav`
+- `geometry_msgs/TwistStamped` bridge into `/servo_node/delta_twist_cmds`
+- Optional Flexiv-GN01 open/close button bridge
+- Lab-friendly scripts for fake hardware, real hardware, servo start, recording,
+  and environment checks
+- A full operator manual for new lab members and robotics researchers
+
+## Tested Stack
+
+| Component | Version / configuration |
+| --- | --- |
+| OS | Ubuntu 22.04.5 LTS |
+| ROS | ROS 2 Humble |
+| Robot stack | `flexiv_ros2` `humble-v1.7` |
+| Robot target | Flexiv Rizon 4s / RDK-compatible v3.9 stack |
+| Input device | 3Dconnexion SpaceMouse through `spacenavd` |
+| Servoing | MoveIt Servo `servo_node_main` |
+
+Other Rizon models supported by `flexiv_ros2` may work after changing
+`RIZON_TYPE` and `ROBOT_SN`.
+
+## Quick Start
+
+On the Ubuntu owner machine:
+
+```bash
+mkdir -p ~/teleop_ws/src
+cd ~/teleop_ws/src
+
+git clone --recurse-submodules --branch humble-v1.7 --depth 1 \
+  https://github.com/flexivrobotics/flexiv_ros2.git
+
+git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
+cd ~/teleop_ws
+
+sudo apt update
+sudo apt install -y spacenavd libspnav-dev ros-humble-spacenav
+rosdep update
+rosdep install --from-paths src --ignore-src --rosdistro humble -r -y
+```
+
+Build the Flexiv RDK dependency first, then build the workspace:
+
+```bash
+cd ~/teleop_ws/src/flexiv_ros2/flexiv_hardware/rdk/thirdparty
+bash build_and_install_dependencies.sh ~/rdk_install
+
+cd ~/teleop_ws/src/flexiv_ros2/flexiv_hardware/rdk
+rm -rf build && mkdir build && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=~/rdk_install
+cmake --build . --target install --config Release -j"$(nproc)"
+
+cd ~/teleop_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --cmake-args -DCMAKE_PREFIX_PATH=~/rdk_install
+source install/setup.bash
+```
+
+Run fake hardware first:
+
+```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_fake_moveit_servo.sh
+```
+
+In a second terminal:
+
+```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/start_servo.sh
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_spacemouse_bridge.sh enable_gripper:=false
+```
+
+For real hardware, read the safety checklist first:
+
+- [Operator manual](docs/OPERATOR_MANUAL.md)
+- [Safety checklist](docs/SAFETY.md)
+- [Troubleshooting guide](docs/TROUBLESHOOTING.md)
+- [Chinese lab quickstart](docs/LAB_QUICKSTART_zh.md)
+
+## Runtime Graph
+
+```mermaid
+flowchart LR
+  sm["SpaceMouse"] --> spn["spacenav_node"]
+  spn --> twist["/spacenav/twist"]
+  spn --> joy["/spacenav/joy"]
+  twist --> bridge["spacemouse_to_servo"]
+  bridge --> servoTopic["/servo_node/delta_twist_cmds"]
+  servoTopic --> servo["MoveIt Servo"]
+  servo --> traj["/rizon_arm_controller/joint_trajectory"]
+  joy --> grip["spacemouse_gn01"]
+  grip --> action["/flexiv_gripper_node/move"]
+```
+
+## Repository Layout
+
+```text
+flexiv_spacemouse_teleop/     ROS 2 Python nodes
+launch/                       ROS launch file
+config/                       Default teleop parameters
+scripts/                      Lab and operator helper scripts
+docs/                         Manual, safety notes, and static website
+.github/workflows/            Lightweight syntax smoke checks
+```
+
+## Safety
+
+This package streams motion commands to a physical robot. Use fake hardware
+before real hardware, keep the emergency stop reachable, set conservative speed
+scales, and verify axis signs away from people and fragile objects.
+
+The default bridge clamps unitless Servo commands to `[-1, 1]` and publishes
+zero commands if SpaceMouse input becomes stale. These protections are helpful,
+but they are not a substitute for a trained operator.
+
+## Citation
+
+If this helps your lab or paper infrastructure, cite the repository:
+
+```bibtex
+@software{lu_flexiv_spacemouse_teleop_2026,
+  author = {Lu, Zihao},
+  title = {Flexiv SpaceMouse Teleop},
+  year = {2026},
+  url = {https://github.com/ZihaoLu001/flexiv-spacemouse-teleop}
+}
+```
+
+## Acknowledgements
+
+This project builds on Flexiv's `flexiv_ros2`, ROS 2 Humble, MoveIt Servo, and
+the FreeSpacenav userspace driver ecosystem. It is not affiliated with Flexiv,
+OpenAI, 3Dconnexion, or the MoveIt maintainers.
+

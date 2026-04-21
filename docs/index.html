@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="A ROS 2 Humble SpaceMouse teleoperation bridge for Flexiv Rizon arms using MoveIt Servo."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <canvas id="robot-canvas" aria-hidden="true"></canvas>
+      <nav>
+        <a class="brand" href="#">Flexiv SpaceMouse Teleop</a>
+        <div>
+          <a href="#quickstart">Quick Start</a>
+          <a href="#manuals">Manuals</a>
+          <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+        </div>
+      </nav>
+      <section class="hero-copy">
+        <p class="eyebrow">ROS 2 Humble · MoveIt Servo · Flexiv Rizon</p>
+        <h1>Flexiv SpaceMouse Teleop</h1>
+        <p>
+          A compact owner-machine teleoperation stack for streaming 6-DoF
+          SpaceMouse commands into a Flexiv Rizon arm, with gripper buttons,
+          safety notes, and lab-ready scripts.
+        </p>
+        <div class="actions">
+          <a class="primary" href="#quickstart">Install</a>
+          <a href="OPERATOR_MANUAL.md">Operator Manual</a>
+        </div>
+      </section>
+    </header>
+
+    <main>
+      <section class="band metrics">
+        <article>
+          <strong>0.25 s</strong>
+          <span>stale-input timeout</span>
+        </article>
+        <article>
+          <strong>50 Hz</strong>
+          <span>default command publish rate</span>
+        </article>
+        <article>
+          <strong>unitless</strong>
+          <span>MoveIt Servo command mode</span>
+        </article>
+      </section>
+
+      <section class="band split" id="quickstart">
+        <div>
+          <p class="eyebrow">Fast Path</p>
+          <h2>Clone into a Flexiv ROS 2 workspace</h2>
+          <p>
+            The repo is a ROS package, not a monolithic robot image. Researchers
+            can drop it into an existing `teleop_ws`, keep Flexiv upstream code
+            separate, and tune the YAML parameters for each lab setup.
+          </p>
+        </div>
+        <pre><code>mkdir -p ~/teleop_ws/src
+cd ~/teleop_ws/src
+git clone https://github.com/flexivrobotics/flexiv_ros2.git
+git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
+cd ~/teleop_ws
+colcon build --symlink-install</code></pre>
+      </section>
+
+      <section class="band flow">
+        <p class="eyebrow">Runtime Flow</p>
+        <h2>Small bridge, clear responsibility</h2>
+        <div class="pipeline">
+          <span>SpaceMouse</span>
+          <span>spacenav_node</span>
+          <span>Twist bridge</span>
+          <span>MoveIt Servo</span>
+          <span>Flexiv controller</span>
+        </div>
+      </section>
+
+      <section class="band cards" id="manuals">
+        <a href="INSTALL.md">
+          <span>01</span>
+          <h3>Install</h3>
+          <p>Owner-machine setup, Flexiv ROS 2 checkout, and workspace build.</p>
+        </a>
+        <a href="OPERATOR_MANUAL.md">
+          <span>02</span>
+          <h3>Operate</h3>
+          <p>Fake hardware, real robot sequence, axis tuning, and demo recording.</p>
+        </a>
+        <a href="SAFETY.md">
+          <span>03</span>
+          <h3>Safety</h3>
+          <p>Checklist for working around a live robot with streaming commands.</p>
+        </a>
+        <a href="TROUBLESHOOTING.md">
+          <span>04</span>
+          <h3>Debug</h3>
+          <p>Common fixes for SpaceMouse, Servo, gripper, and network issues.</p>
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <span>Built for lab-friendly Flexiv teleoperation research.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">View source</a>
+    </footer>
+    <script src="assets/site.js"></script>
+  </body>
+</html>
+
