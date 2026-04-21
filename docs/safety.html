@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Safety | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Safety checklist for live Flexiv Rizon SpaceMouse teleoperation."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="install.html">Install</a>
+        <a href="operator-manual.html">Operate</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a href="install.html">Installation</a>
+        <a href="operator-manual.html">Operator Manual</a>
+        <a aria-current="page" href="safety.html">Safety Checklist</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a href="research-workflow.html">Research Workflow</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">Real Robot Checklist</p>
+        <h1>Safety Checklist</h1>
+        <p>Use this checklist before any real-robot teleoperation session.</p>
+
+        <h2>Before Launch</h2>
+        <ul>
+          <li>Emergency stop is reachable.</li>
+          <li>The workspace is clear of people, cables, cameras, and fragile objects.</li>
+          <li>The robot is in the expected Remote Mode.</li>
+          <li>The owner machine can ping the robot.</li>
+          <li>No stale ROS control processes are running.</li>
+          <li>SpaceMouse motion has been tested in fake hardware.</li>
+          <li>Speed scales are conservative.</li>
+          <li>A second person knows the robot is about to move if the lab requires it.</li>
+        </ul>
+
+        <h2>During Operation</h2>
+        <ul>
+          <li>Keep one hand near the emergency stop.</li>
+          <li>Start with small SpaceMouse deflections.</li>
+          <li>Verify each translation axis before using rotation.</li>
+          <li>Verify gripper buttons with no object before grasping.</li>
+          <li>Stop if MoveIt Servo reports persistent singularity, collision, or stale-state warnings.</li>
+        </ul>
+
+        <h2>After Operation</h2>
+        <ul>
+          <li>Stop recording.</li>
+          <li>Stop teleop launch processes.</li>
+          <li>Save ROS logs if there was an anomaly.</li>
+          <li>Return the robot to a safe pose according to lab policy.</li>
+        </ul>
+
+        <h2>Limits of This Package</h2>
+        <div class="callout">
+          The bridge clamps commands and zeroes stale input. It does not enforce
+          lab workspace boundaries, human detection, task-level constraints, or
+          force limits. Those remain the responsibility of the robot controller,
+          lab procedures, and operator.
+        </div>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>Safety checklist source is also available as Markdown in the repo.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/SAFETY.md">View Markdown</a>
+    </footer>
+  </body>
+</html>

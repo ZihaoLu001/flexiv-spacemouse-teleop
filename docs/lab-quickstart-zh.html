@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>实验室快速手册 | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Flexiv SpaceMouse teleoperation 中文实验室快速手册。"
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="install.html">Install</a>
+        <a href="operator-manual.html">Operate</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a href="install.html">Installation</a>
+        <a href="operator-manual.html">Operator Manual</a>
+        <a href="safety.html">Safety Checklist</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a href="research-workflow.html">Research Workflow</a>
+        <a aria-current="page" href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">实验室上手机</p>
+        <h1>实验室快速手册</h1>
+        <p>
+          这份手册给实验室同学使用。默认 owner machine 是连接 Flexiv、
+          SpaceMouse、相机的 Ubuntu 22.04 主机。
+        </p>
+
+        <h2>第一次安装</h2>
+        <pre><code>mkdir -p ~/teleop_ws/src
+cd ~/teleop_ws/src
+git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
+cd flexiv-spacemouse-teleop
+
+scripts/install_owner_machine_ubuntu22_humble.sh
+scripts/fetch_flexiv_ros2_humble_v1_7.sh
+scripts/build_workspace.sh</code></pre>
+
+        <h2>每次使用前检查</h2>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+export ROBOT_SN=&lt;你的机器人序列号&gt;
+export RIZON_TYPE=Rizon4s
+scripts/doctor.sh</code></pre>
+        <p>确认：</p>
+        <ul>
+          <li><code>spacenavd</code> 是 active。</li>
+          <li><code>ping 192.168.100.1</code> 成功。</li>
+          <li><code>flexiv_spacemouse_teleop</code> 能被 ROS 找到。</li>
+          <li>没有旧的 <code>servo_node_main</code>、<code>move_group</code> 或 <code>ros2_control_node</code>。</li>
+        </ul>
+
+        <h2>Fake Hardware</h2>
+        <h3>终端 1</h3>
+        <pre><code>export ROBOT_SN=&lt;你的机器人序列号&gt;
+export RIZON_TYPE=Rizon4s
+scripts/run_fake_moveit_servo.sh</code></pre>
+
+        <h3>终端 2</h3>
+        <pre><code>scripts/start_servo.sh
+scripts/run_spacemouse_bridge.sh enable_gripper:=false</code></pre>
+
+        <h2>真机</h2>
+        <div class="callout">
+          真机前先确认急停、工作空间、Remote Mode 和 RDK 状态。第一次测试时速度要保守，
+          手要靠近急停。
+        </div>
+
+        <h3>终端 1</h3>
+        <pre><code>export ROBOT_SN=&lt;你的机器人序列号&gt;
+export RIZON_TYPE=Rizon4s
+python3 scripts/init_gn01_once.py
+scripts/run_real_moveit_servo.sh</code></pre>
+
+        <h3>终端 2</h3>
+        <pre><code>scripts/start_servo.sh
+scripts/run_spacemouse_bridge.sh</code></pre>
+
+        <h2>录 demos</h2>
+        <h3>终端 3</h3>
+        <pre><code>scripts/record_demo.sh</code></pre>
+        <p>默认保存到：</p>
+        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS</code></pre>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>中文快速手册的 Markdown 版本也保留在仓库里。</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/LAB_QUICKSTART_zh.md">查看 Markdown</a>
+    </footer>
+  </body>
+</html>

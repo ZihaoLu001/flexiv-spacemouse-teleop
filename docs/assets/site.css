@@ -279,6 +279,126 @@ footer a {
   color: #76d9cf;
 }
 
+.doc-page {
+  background: #f7f9fa;
+}
+
+.doc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  background: rgba(247, 249, 250, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.doc-nav div {
+  color: var(--muted);
+}
+
+.doc-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 60px);
+  width: min(1180px, calc(100% - 44px));
+  margin: 0 auto;
+  padding: 46px 0 72px;
+}
+
+.doc-sidebar {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.doc-sidebar a {
+  display: block;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.doc-sidebar a:hover,
+.doc-sidebar a[aria-current="page"] {
+  color: var(--ink);
+  background: #edf5f4;
+}
+
+.doc-content {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: clamp(26px, 5vw, 58px);
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgba(23, 32, 38, 0.08);
+}
+
+.doc-content h1 {
+  margin-bottom: 18px;
+  font-size: clamp(38px, 6vw, 64px);
+  line-height: 1;
+}
+
+.doc-content h2 {
+  margin: 42px 0 14px;
+  font-size: clamp(25px, 4vw, 36px);
+}
+
+.doc-content h3 {
+  margin: 30px 0 10px;
+  font-size: 22px;
+}
+
+.doc-content p,
+.doc-content li {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.doc-content ul,
+.doc-content ol {
+  padding-left: 23px;
+}
+
+.doc-content li + li {
+  margin-top: 6px;
+}
+
+.doc-content a {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.doc-content pre {
+  margin: 18px 0 26px;
+  box-shadow: none;
+}
+
+.callout {
+  border-left: 5px solid var(--amber);
+  border-radius: 8px;
+  margin: 24px 0;
+  padding: 18px 20px;
+  color: #463014;
+  background: #fff7ea;
+}
+
+.callout strong {
+  color: #2d2417;
+}
+
+.doc-footer {
+  width: min(1180px, calc(100% - 44px));
+  margin: 0 auto;
+}
+
 @media (max-width: 860px) {
   nav {
     align-items: flex-start;
@@ -299,5 +419,12 @@ footer a {
   footer {
     flex-direction: column;
   }
-}
 
+  .doc-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-sidebar {
+    position: static;
+  }
+}

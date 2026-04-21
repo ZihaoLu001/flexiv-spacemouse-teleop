@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Operator Manual | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Run fake-hardware and real-robot SpaceMouse teleoperation for a Flexiv Rizon arm."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="install.html">Install</a>
+        <a href="safety.html">Safety</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a href="install.html">Installation</a>
+        <a aria-current="page" href="operator-manual.html">Operator Manual</a>
+        <a href="safety.html">Safety Checklist</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a href="research-workflow.html">Research Workflow</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">Teleoperation Procedure</p>
+        <h1>Operator Manual</h1>
+        <p>
+          This manual is for running SpaceMouse teleoperation on a Flexiv Rizon
+          arm through ROS 2 Humble and MoveIt Servo.
+        </p>
+
+        <h2>Required Hardware</h2>
+        <ul>
+          <li>Flexiv Rizon arm with RDK enabled.</li>
+          <li>Ubuntu 22.04 owner machine on the robot network.</li>
+          <li>3Dconnexion SpaceMouse connected to the owner machine.</li>
+          <li>Flexiv-GN01 gripper if using button-controlled grasping.</li>
+        </ul>
+
+        <h2>Network Checklist</h2>
+        <p>
+          The owner machine should be on the robot network. For a direct
+          connection to the Flexiv general port, the robot is commonly
+          reachable at:
+        </p>
+        <pre><code>ping 192.168.100.1</code></pre>
+        <p>If the ping fails, stop and fix networking before launching ROS.</p>
+
+        <h2>Fake Hardware Procedure</h2>
+        <h3>Terminal 1</h3>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+export ROBOT_SN=Rizon4s-123456
+export RIZON_TYPE=Rizon4s
+scripts/run_fake_moveit_servo.sh</code></pre>
+
+        <h3>Terminal 2</h3>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/start_servo.sh
+scripts/run_spacemouse_bridge.sh enable_gripper:=false</code></pre>
+
+        <h3>Terminal 3</h3>
+        <pre><code>ros2 topic echo /servo_node/delta_twist_cmds</code></pre>
+        <p>
+          Move the SpaceMouse and verify that
+          <code>TwistStamped</code> messages change.
+        </p>
+
+        <h2>Real Hardware Procedure</h2>
+        <ol>
+          <li>Clear the robot workspace.</li>
+          <li>Keep emergency stop reachable.</li>
+          <li>Confirm the robot is in Remote Mode and RDK is enabled.</li>
+          <li>Confirm network with <code>ping 192.168.100.1</code>.</li>
+          <li>Start with conservative speed scales.</li>
+        </ol>
+
+        <h3>Initialize the GN01 gripper once after controller power-cycle</h3>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+export ROBOT_SN=Rizon4s-123456
+export RIZON_TYPE=Rizon4s
+python3 scripts/init_gn01_once.py</code></pre>
+
+        <h3>Start robot, MoveIt, and Servo</h3>
+        <pre><code>scripts/run_real_moveit_servo.sh</code></pre>
+
+        <h3>Start Servo and SpaceMouse in another terminal</h3>
+        <pre><code>scripts/start_servo.sh
+scripts/run_spacemouse_bridge.sh</code></pre>
+
+        <h2>Axis Tuning</h2>
+        <p>If an axis feels reversed, edit <code>config/spacemouse_teleop.yaml</code>:</p>
+        <pre><code>sign_lx: 1.0
+sign_ly: -1.0
+sign_lz: 1.0
+sign_ax: 1.0
+sign_ay: -1.0
+sign_az: 1.0</code></pre>
+
+        <p>If the robot moves too quickly, reduce:</p>
+        <pre><code>linear_scale: 0.20
+angular_scale: 0.40</code></pre>
+
+        <h2>Recording Demonstrations</h2>
+        <p>Start a recording terminal after the teleop stack is running:</p>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/record_demo.sh</code></pre>
+        <p>The default output path is:</p>
+        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS</code></pre>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>Operator manual source is also available as Markdown in the repo.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/OPERATOR_MANUAL.md">View Markdown</a>
+    </footer>
+  </body>
+</html>

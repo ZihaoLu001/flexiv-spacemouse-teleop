@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Install ROS 2 Humble, MoveIt Servo, Flexiv ROS 2, and the SpaceMouse teleoperation bridge."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="operator-manual.html">Operate</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a aria-current="page" href="install.html">Installation</a>
+        <a href="operator-manual.html">Operator Manual</a>
+        <a href="safety.html">Safety Checklist</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a href="research-workflow.html">Research Workflow</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">Owner Machine Setup</p>
+        <h1>Installation Guide</h1>
+        <p>
+          This guide assumes the owner machine is the Ubuntu PC physically
+          connected to the Flexiv control box, SpaceMouse, and optional camera.
+          The recommended target is Ubuntu 22.04 with ROS 2 Humble.
+        </p>
+
+        <div class="callout">
+          <strong>Keep upstream Flexiv code separate.</strong> Clone this
+          package beside <code>flexiv_ros2</code> inside the same
+          <code>~/teleop_ws/src</code> workspace.
+        </div>
+
+        <h2>1. Install Owner Machine Dependencies</h2>
+        <pre><code>mkdir -p ~/teleop_ws/src
+cd ~/teleop_ws/src
+git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
+cd flexiv-spacemouse-teleop
+
+scripts/install_owner_machine_ubuntu22_humble.sh</code></pre>
+        <p>
+          The script installs ROS 2 Humble, MoveIt, MoveIt Servo,
+          <code>ros2_control</code>, <code>spacenavd</code>, and the ROS
+          <code>spacenav</code> package.
+        </p>
+
+        <h2>2. Fetch Flexiv ROS 2</h2>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/fetch_flexiv_ros2_humble_v1_7.sh</code></pre>
+        <p>
+          Use <code>humble-v1.7</code> for Flexiv software package v3.9 and
+          RDK v1.7 compatibility.
+        </p>
+
+        <h2>3. Build the Workspace</h2>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/build_workspace.sh</code></pre>
+        <p>
+          This builds Flexiv RDK dependencies into <code>~/rdk_install</code>,
+          then builds the ROS 2 workspace with <code>colcon</code>.
+        </p>
+
+        <h2>4. Source the Workspace</h2>
+        <p>Add this to <code>~/.bashrc</code> on the owner machine:</p>
+        <pre><code>source /opt/ros/humble/setup.bash
+source ~/teleop_ws/install/setup.bash</code></pre>
+
+        <p>Open a new terminal and verify:</p>
+        <pre><code>ros2 pkg list | grep flexiv_spacemouse_teleop
+ros2 pkg executables flexiv_spacemouse_teleop</code></pre>
+
+        <h2>5. Run the Doctor</h2>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+export ROBOT_SN=Rizon4s-123456
+export RIZON_TYPE=Rizon4s
+scripts/doctor.sh</code></pre>
+        <p>
+          Replace <code>ROBOT_SN</code> with your lab robot serial before real
+          hardware operation.
+        </p>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>Installation source is also available as Markdown in the repo.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/INSTALL.md">View Markdown</a>
+    </footer>
+  </body>
+</html>

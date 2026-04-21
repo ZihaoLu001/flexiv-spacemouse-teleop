@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Troubleshooting | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Fix common SpaceMouse, MoveIt Servo, gripper, and robot network issues."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="install.html">Install</a>
+        <a href="operator-manual.html">Operate</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a href="install.html">Installation</a>
+        <a href="operator-manual.html">Operator Manual</a>
+        <a href="safety.html">Safety Checklist</a>
+        <a aria-current="page" href="troubleshooting.html">Troubleshooting</a>
+        <a href="research-workflow.html">Research Workflow</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">Debug Playbook</p>
+        <h1>Troubleshooting</h1>
+
+        <h2><code>codex</code> or <code>ros2</code> Works in One Terminal but Not Another</h2>
+        <p>Source the environment:</p>
+        <pre><code>source /opt/ros/humble/setup.bash
+source ~/teleop_ws/install/setup.bash</code></pre>
+
+        <h2>SpaceMouse Topics Are Missing</h2>
+        <p>Check the daemon:</p>
+        <pre><code>systemctl status spacenavd --no-pager
+sudo systemctl restart spacenavd</code></pre>
+
+        <p>Start the node and inspect topics:</p>
+        <pre><code>ros2 run spacenav spacenav_node
+ros2 topic echo /spacenav/twist
+ros2 topic echo /spacenav/joy</code></pre>
+
+        <h2>Servo Does Not Move</h2>
+        <p>Check that <code>/servo_node</code> exists:</p>
+        <pre><code>ros2 node list | grep servo
+ros2 node info /servo_node</code></pre>
+
+        <p>Start Servo:</p>
+        <pre><code>ros2 service call /servo_node/start_servo std_srvs/srv/Trigger "{}"</code></pre>
+
+        <p>Check the command topic:</p>
+        <pre><code>ros2 topic echo /servo_node/delta_twist_cmds</code></pre>
+
+        <h2>Gripper Button Does Nothing</h2>
+        <p>Check that the gripper action exists:</p>
+        <pre><code>ros2 action list | grep flexiv_gripper_node</code></pre>
+
+        <p>Initialize GN01 once after controller power-cycle:</p>
+        <pre><code>python3 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/init_gn01_once.py</code></pre>
+
+        <h2>Robot Ping Fails</h2>
+        <p>Check routes and interface:</p>
+        <pre><code>ip -br addr
+ip route get 192.168.100.1
+ping 192.168.100.1</code></pre>
+
+        <p>
+          If the owner machine is directly connected to the Flexiv general port,
+          keep MTU at 1500 and use automatic IPv4 unless your lab network policy
+          says otherwise.
+        </p>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>Troubleshooting source is also available as Markdown in the repo.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/TROUBLESHOOTING.md">View Markdown</a>
+    </footer>
+  </body>
+</html>

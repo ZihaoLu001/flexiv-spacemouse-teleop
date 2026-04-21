@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Research Workflow | Flexiv SpaceMouse Teleop</title>
+    <meta
+      name="description"
+      content="Recommended demonstration collection workflow for Flexiv teleoperation research."
+    />
+    <link rel="stylesheet" href="assets/site.css" />
+  </head>
+  <body class="doc-page">
+    <nav class="doc-nav">
+      <a class="brand" href="index.html">Flexiv SpaceMouse Teleop</a>
+      <div>
+        <a href="install.html">Install</a>
+        <a href="operator-manual.html">Operate</a>
+        <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop">GitHub</a>
+      </div>
+    </nav>
+
+    <main class="doc-shell">
+      <aside class="doc-sidebar">
+        <a href="install.html">Installation</a>
+        <a href="operator-manual.html">Operator Manual</a>
+        <a href="safety.html">Safety Checklist</a>
+        <a href="troubleshooting.html">Troubleshooting</a>
+        <a aria-current="page" href="research-workflow.html">Research Workflow</a>
+        <a href="lab-quickstart-zh.html">中文快速手册</a>
+      </aside>
+
+      <article class="doc-content">
+        <p class="eyebrow">Demos to Datasets</p>
+        <h1>Research Workflow</h1>
+        <p>
+          This stack is designed to get reliable human demonstrations before
+          adding more camera or policy-learning infrastructure.
+        </p>
+
+        <h2>Recommended Bring-up Order</h2>
+        <ol>
+          <li>Fake hardware teleop.</li>
+          <li>Real robot with no objects.</li>
+          <li>Real robot with simple pick/place props.</li>
+          <li>Add fixed global camera.</li>
+          <li>Add rosbag recorder.</li>
+          <li>Convert bags into policy-learning datasets.</li>
+        </ol>
+
+        <h2>Suggested Topics for Demonstrations</h2>
+        <pre><code>/spacenav/twist
+/spacenav/joy
+/joint_states
+/${ROBOT_SN}/flexiv_robot_states
+/${ROBOT_SN}/tcp_pose
+/${ROBOT_SN}/external_wrench_in_tcp
+/${ROBOT_SN}/external_wrench_in_world
+/servo_node/status
+/rizon_arm_controller/joint_trajectory</code></pre>
+        <p>
+          Add camera topics later, for example ZED color images, depth, and
+          camera info.
+        </p>
+
+        <h2>Dataset Notes</h2>
+        <ul>
+          <li>Store raw bags unchanged.</li>
+          <li>Write converted datasets to a separate directory.</li>
+          <li>Keep robot serial, workspace layout, camera pose, and task description in metadata.</li>
+          <li>Record failed attempts; they are useful for debugging teleop and reset policy.</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="doc-footer">
+      <span>Research workflow source is also available as Markdown in the repo.</span>
+      <a href="https://github.com/ZihaoLu001/flexiv-spacemouse-teleop/blob/main/docs/RESEARCH_WORKFLOW.md">View Markdown</a>
+    </footer>
+  </body>
+</html>

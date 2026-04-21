@@ -89,10 +89,11 @@ In a second terminal:
 
 For real hardware, read the safety checklist first:
 
-- [Operator manual](docs/OPERATOR_MANUAL.md)
-- [Safety checklist](docs/SAFETY.md)
-- [Troubleshooting guide](docs/TROUBLESHOOTING.md)
-- [Chinese lab quickstart](docs/LAB_QUICKSTART_zh.md)
+- [Project website](https://zihaolu001.github.io/flexiv-spacemouse-teleop/)
+- [Operator manual](https://zihaolu001.github.io/flexiv-spacemouse-teleop/operator-manual.html)
+- [Safety checklist](https://zihaolu001.github.io/flexiv-spacemouse-teleop/safety.html)
+- [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
+- [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 
 ## Runtime Graph
 
@@ -148,4 +149,3 @@ If this helps your lab or paper infrastructure, cite the repository:
 This project builds on Flexiv's `flexiv_ros2`, ROS 2 Humble, MoveIt Servo, and
 the FreeSpacenav userspace driver ecosystem. It is not affiliated with Flexiv,
 OpenAI, 3Dconnexion, or the MoveIt maintainers.
-
