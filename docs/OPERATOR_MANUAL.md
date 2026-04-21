@@ -99,6 +99,15 @@ scripts/run_spacemouse_bridge.sh enable_gripper:=false
 Hold SpaceMouse button `0` while commanding motion. Release it immediately if
 anything feels wrong.
 
+After the arm axes are verified, you can restart the bridge with gripper support:
+
+```bash
+scripts/run_spacemouse_bridge.sh enable_gripper:=true
+```
+
+With gripper support enabled, button `0` remains the arm deadman and button `1`
+toggles the GN01 between close and open. Test the toggle with no object first.
+
 ## Axis Tuning
 
 If an axis feels reversed, edit `config/spacemouse_teleop.yaml`:

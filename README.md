@@ -20,7 +20,7 @@ gripper.
 - `geometry_msgs/TwistStamped` bridge into `/servo_node/delta_twist_cmds`
 - Deadman button gating: by default, hold SpaceMouse button `0` before motion
   commands are forwarded
-- Optional Flexiv-GN01 open/close button bridge
+- Optional Flexiv-GN01 button bridge: SpaceMouse button `1` toggles close/open
 - ZED 2i fixed RGB publishing through the standard ROS `v4l2_camera` driver
 - Session restore tools that save the start joint state and optionally return to it
 - Lab-friendly scripts for fake hardware, real hardware, servo start, recording,
@@ -97,6 +97,9 @@ In a second terminal:
 
 By default the bridge is armed only while SpaceMouse button `0` is held. Release
 that button and the bridge publishes zero twist.
+
+When gripper support is enabled, button `0` remains the motion deadman and
+button `1` toggles GN01 close/open.
 
 Start the ZED 2i fixed RGB stream in another terminal:
 

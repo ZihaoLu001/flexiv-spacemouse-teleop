@@ -16,8 +16,9 @@ class SpaceMouseGN01(Node):
 
         self.declare_parameter("joy_topic", "/spacenav/joy")
         self.declare_parameter("action_name", "/flexiv_gripper_node/move")
-        self.declare_parameter("open_button_idx", 0)
-        self.declare_parameter("close_button_idx", 1)
+        self.declare_parameter("open_button_idx", -1)
+        self.declare_parameter("close_button_idx", -1)
+        self.declare_parameter("toggle_button_idx", 1)
         self.declare_parameter("open_width", 0.09)
         self.declare_parameter("close_width", 0.01)
         self.declare_parameter("velocity", 0.10)
@@ -28,6 +29,7 @@ class SpaceMouseGN01(Node):
         self.action_name = self.get_parameter("action_name").value
         self.open_button_idx = int(self.get_parameter("open_button_idx").value)
         self.close_button_idx = int(self.get_parameter("close_button_idx").value)
+        self.toggle_button_idx = int(self.get_parameter("toggle_button_idx").value)
         self.open_width = float(self.get_parameter("open_width").value)
         self.close_width = float(self.get_parameter("close_width").value)
         self.velocity = float(self.get_parameter("velocity").value)
@@ -35,6 +37,7 @@ class SpaceMouseGN01(Node):
         self.server_wait_timeout = float(self.get_parameter("server_wait_timeout").value)
 
         self.prev_buttons = []
+        self.toggle_is_open = True
         self.last_warn_time = None
         self.client = ActionClient(self, Move, self.action_name)
         self.create_subscription(Joy, self.joy_topic, self.joy_cb, 10)
@@ -76,10 +79,22 @@ class SpaceMouseGN01(Node):
         if self._rising_edge(buttons, self.open_button_idx):
             self.get_logger().info("GN01 OPEN")
             self.send_move(self.open_width)
+            self.toggle_is_open = True
 
         if self._rising_edge(buttons, self.close_button_idx):
             self.get_logger().info("GN01 CLOSE")
             self.send_move(self.close_width)
+            self.toggle_is_open = False
+
+        if self._rising_edge(buttons, self.toggle_button_idx):
+            if self.toggle_is_open:
+                self.get_logger().info("GN01 TOGGLE -> CLOSE")
+                self.send_move(self.close_width)
+                self.toggle_is_open = False
+            else:
+                self.get_logger().info("GN01 TOGGLE -> OPEN")
+                self.send_move(self.open_width)
+                self.toggle_is_open = True
 
         self.prev_buttons = buttons
 
@@ -97,4 +112,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

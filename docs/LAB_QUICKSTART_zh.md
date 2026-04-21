@@ -84,6 +84,15 @@ scripts/run_spacemouse_bridge.sh enable_gripper:=false
 
 按住 SpaceMouse 0 号按钮才会动；感觉不对立刻松手。
 
+机械臂方向确认没问题后，如果要启用夹爪：
+
+```bash
+scripts/run_spacemouse_bridge.sh enable_gripper:=true
+```
+
+启用 gripper 后，0 号按钮仍然是机械臂 deadman，1 号按钮在夹爪 close/open
+之间切换。第一次请空夹爪测试，不要直接抓物体。
+
 ## 录 demos
 
 需要图像观测时，先开 ZED 2i RGB：

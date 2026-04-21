@@ -23,8 +23,9 @@ spacemouse_gn01:
   ros__parameters:
     joy_topic: /spacenav/joy
     action_name: /flexiv_gripper_node/move
-    open_button_idx: 0
-    close_button_idx: 1
+    open_button_idx: -1
+    close_button_idx: -1
+    toggle_button_idx: 1
     open_width: 0.09
     close_width: 0.01
     velocity: 0.10
