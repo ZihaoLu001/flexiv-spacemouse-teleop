@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 mkdir -p "$WORKSPACE/src"
@@ -16,4 +16,3 @@ else
 fi
 
 echo "flexiv_ros2 humble-v1.7 is ready under $WORKSPACE/src/flexiv_ros2"
-

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 pkill -INT -f 'ros2 launch flexiv_bringup' || true
 pkill -INT -f 'ros2 launch flexiv_spacemouse_teleop' || true
@@ -12,4 +12,3 @@ pkill -TERM -f 'spacemouse_to_servo' || true
 pkill -TERM -f 'spacemouse_gn01' || true
 
 echo "Requested ROS teleop stack shutdown."
-

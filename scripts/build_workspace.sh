@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 RDK_INSTALL="${RDK_INSTALL:-$HOME/rdk_install}"
@@ -29,4 +29,3 @@ cd "$WORKSPACE"
 colcon build --symlink-install --cmake-args -DCMAKE_PREFIX_PATH="$RDK_INSTALL"
 
 echo "Build complete. Source $WORKSPACE/install/setup.bash before running."
-

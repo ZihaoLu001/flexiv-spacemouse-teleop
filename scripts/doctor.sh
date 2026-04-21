@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 ROBOT_IP="${ROBOT_IP:-192.168.100.1}"
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
@@ -46,4 +46,3 @@ fi
 
 section "ROS Processes"
 ps -eo pid,cmd | grep -E '[s]ervo_node_main|[m]ove_group|[r]os2_control_node|[s]pacenav_node|[s]pacemouse_to_servo|[s]pacemouse_gn01' || true
-

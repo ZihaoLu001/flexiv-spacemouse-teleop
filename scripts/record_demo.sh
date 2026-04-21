@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 ROBOT_SN="${ROBOT_SN:-Rizon4s-123456}"
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"

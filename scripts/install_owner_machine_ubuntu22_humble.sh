@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -64,4 +64,3 @@ rosdep update
 sudo systemctl enable --now spacenavd
 
 echo "Owner machine dependencies installed."
-
