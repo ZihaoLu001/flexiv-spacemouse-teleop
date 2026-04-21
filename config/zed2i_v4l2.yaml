@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    video_device: /dev/video0
+    image_size: [640, 480]
+    pixel_format: YUYV
+    output_encoding: rgb8
+    camera_frame_id: zed2i_camera_frame
+    camera_name: zed2i_rgb

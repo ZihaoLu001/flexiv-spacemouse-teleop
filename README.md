@@ -19,6 +19,7 @@ gripper.
 - 6-DoF SpaceMouse input via `spacenavd` and `ros-humble-spacenav`
 - `geometry_msgs/TwistStamped` bridge into `/servo_node/delta_twist_cmds`
 - Optional Flexiv-GN01 open/close button bridge
+- ZED 2i fixed RGB publishing through the standard ROS `v4l2_camera` driver
 - Lab-friendly scripts for fake hardware, real hardware, servo start, recording,
   and environment checks
 - A full operator manual for new lab members and robotics researchers
@@ -32,6 +33,7 @@ gripper.
 | Robot stack | `flexiv_ros2` `humble-v1.7` |
 | Robot target | Flexiv Rizon 4s / RDK-compatible v3.9 stack |
 | Input device | 3Dconnexion SpaceMouse through `spacenavd` |
+| Camera | ZED 2i as USB3 V4L2 RGB stream |
 | Servoing | MoveIt Servo `servo_node_main` |
 
 Other Rizon models supported by `flexiv_ros2` may work after changing
@@ -52,7 +54,10 @@ git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
 cd ~/teleop_ws
 
 sudo apt update
-sudo apt install -y spacenavd libspnav-dev ros-humble-spacenav
+sudo apt install -y \
+  spacenavd libspnav-dev ros-humble-spacenav \
+  v4l-utils ros-humble-v4l2-camera ros-humble-image-view \
+  ros-humble-image-transport-plugins
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro humble -r -y
 ```
@@ -87,6 +92,14 @@ In a second terminal:
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_spacemouse_bridge.sh enable_gripper:=false
 ```
 
+Start the ZED 2i fixed RGB stream in another terminal:
+
+```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_zed_rgb_camera.sh
+```
+
+It publishes `/zed2i/image_raw` and `/zed2i/camera_info`.
+
 For real hardware, read the safety checklist first:
 
 - [Project website](https://zihaolu001.github.io/flexiv-spacemouse-teleop/)
@@ -108,6 +121,8 @@ flowchart LR
   servo --> traj["/rizon_arm_controller/joint_trajectory"]
   joy --> grip["spacemouse_gn01"]
   grip --> action["/flexiv_gripper_node/move"]
+  zed["ZED 2i"] --> cam["v4l2_camera"]
+  cam --> image["/zed2i/image_raw"]
 ```
 
 ## Repository Layout

@@ -11,7 +11,8 @@ scripts/install_owner_machine_ubuntu22_humble.sh
 ```
 
 The script installs ROS 2 Humble, MoveIt, MoveIt Servo, ros2_control,
-`spacenavd`, and the ROS `spacenav` package.
+`spacenavd`, the ROS `spacenav` package, and the V4L2 camera tools used for
+the ZED 2i fixed RGB stream.
 
 ## 2. Fetch Flexiv ROS 2
 
@@ -50,4 +51,3 @@ Open a new terminal and verify:
 ros2 pkg list | grep flexiv_spacemouse_teleop
 ros2 pkg executables flexiv_spacemouse_teleop
 ```
-

@@ -111,6 +111,20 @@ source install/setup.bash
 
 ## Recording Demonstrations
 
+Start the ZED 2i fixed RGB stream before recording if image observations are
+needed:
+
+```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/run_zed_rgb_camera.sh
+```
+
+Verify:
+
+```bash
+scripts/check_camera_topics.sh
+```
+
 Start a recording terminal after the teleop stack is running:
 
 ```bash

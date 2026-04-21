@@ -70,6 +70,18 @@ scripts/run_spacemouse_bridge.sh
 
 ## 录 demos
 
+需要图像观测时，先开 ZED 2i RGB：
+
+```bash
+scripts/run_zed_rgb_camera.sh
+```
+
+检查相机 topic：
+
+```bash
+scripts/check_camera_topics.sh
+```
+
 终端 3：
 
 ```bash

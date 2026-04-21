@@ -35,6 +35,23 @@ section "Input Device"
 systemctl is-active spacenavd || true
 lsusb | grep -Ei '3dconnexion|spacemouse' || echo "SpaceMouse USB device not detected by lsusb"
 
+section "Camera"
+if lsusb | grep -Ei 'stereolabs|zed' >/dev/null; then
+  lsusb | grep -Ei 'stereolabs|zed'
+else
+  echo "ZED USB device not detected by lsusb"
+fi
+lsusb -t | grep -E '5000M|10000M|20000M' || echo "No SuperSpeed USB camera path detected"
+ls -l /dev/video* 2>/dev/null || echo "No /dev/video* devices detected"
+if command -v v4l2-ctl >/dev/null; then
+  v4l2-ctl --list-devices || true
+else
+  echo "v4l2-ctl missing; install v4l-utils"
+fi
+if command -v ros2 >/dev/null; then
+  ros2 pkg list | grep -E '^v4l2_camera$' || echo "ROS v4l2_camera package missing"
+fi
+
 section "Robot Network"
 ip -br addr
 ip route get "$ROBOT_IP" || true

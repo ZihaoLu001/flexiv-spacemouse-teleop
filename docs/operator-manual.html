@@ -111,6 +111,11 @@ sign_az: 1.0</code></pre>
 angular_scale: 0.40</code></pre>
 
         <h2>Recording Demonstrations</h2>
+        <p>Start the ZED 2i fixed RGB stream before recording if image observations are needed:</p>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/run_zed_rgb_camera.sh</code></pre>
+        <p>Verify the camera topic:</p>
+        <pre><code>scripts/check_camera_topics.sh</code></pre>
         <p>Start a recording terminal after the teleop stack is running:</p>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 scripts/record_demo.sh</code></pre>

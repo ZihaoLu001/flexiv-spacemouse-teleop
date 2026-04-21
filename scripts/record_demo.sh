@@ -18,4 +18,6 @@ ros2 bag record -o "$OUT_DIR" \
   "/${ROBOT_SN}/external_wrench_in_tcp" \
   "/${ROBOT_SN}/external_wrench_in_world" \
   /servo_node/status \
-  /rizon_arm_controller/joint_trajectory
+  /rizon_arm_controller/joint_trajectory \
+  /zed2i/image_raw \
+  /zed2i/camera_info

@@ -11,7 +11,7 @@ fi
 sudo apt update
 sudo apt install -y \
   curl ca-certificates git build-essential software-properties-common gnupg lsb-release \
-  wget cmake python3-pip libeigen3-dev spacenavd libspnav-dev
+  wget cmake python3-pip libeigen3-dev spacenavd libspnav-dev v4l-utils
 
 sudo add-apt-repository universe -y
 
@@ -51,6 +51,9 @@ sudo apt install -y \
   ros-humble-ros2-controllers \
   ros-humble-rviz2 \
   ros-humble-spacenav \
+  ros-humble-v4l2-camera \
+  ros-humble-image-view \
+  ros-humble-image-transport-plugins \
   ros-humble-test-msgs \
   ros-humble-tinyxml2-vendor \
   ros-humble-warehouse-ros-sqlite \
