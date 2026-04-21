@@ -20,6 +20,7 @@ gripper.
 - `geometry_msgs/TwistStamped` bridge into `/servo_node/delta_twist_cmds`
 - Optional Flexiv-GN01 open/close button bridge
 - ZED 2i fixed RGB publishing through the standard ROS `v4l2_camera` driver
+- Session restore tools that save the start joint state and optionally return to it
 - Lab-friendly scripts for fake hardware, real hardware, servo start, recording,
   and environment checks
 - A full operator manual for new lab members and robotics researchers
@@ -100,6 +101,23 @@ Start the ZED 2i fixed RGB stream in another terminal:
 
 It publishes `/zed2i/image_raw` and `/zed2i/camera_info`.
 
+Before moving the arm, save the session start state:
+
+```bash
+STATE_FILE=$(~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/save_start_state.sh)
+echo "$STATE_FILE"
+```
+
+At the end of teleoperation, return to that pose before shutting down:
+
+```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/restore_start_state.sh "$STATE_FILE" --execute
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/stop_ros_stack.sh
+```
+
+The restore command moves the robot, so it requires the explicit `--execute`
+flag. Without that flag it only prints a dry-run summary.
+
 For real hardware, read the safety checklist first:
 
 - [Project website](https://zihaolu001.github.io/flexiv-spacemouse-teleop/)
@@ -123,6 +141,9 @@ flowchart LR
   grip --> action["/flexiv_gripper_node/move"]
   zed["ZED 2i"] --> cam["v4l2_camera"]
   cam --> image["/zed2i/image_raw"]
+  js["/joint_states"] --> save["save_start_state"]
+  save --> restore["return_to_joint_state"]
+  restore --> controller["/rizon_arm_controller/follow_joint_trajectory"]
 ```
 
 ## Repository Layout

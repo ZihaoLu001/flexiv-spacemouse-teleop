@@ -24,6 +24,8 @@ setup(
         "console_scripts": [
             "spacemouse_to_servo = flexiv_spacemouse_teleop.spacemouse_to_servo:main",
             "spacemouse_gn01 = flexiv_spacemouse_teleop.spacemouse_gn01:main",
+            "save_start_state = flexiv_spacemouse_teleop.save_start_state:main",
+            "return_to_joint_state = flexiv_spacemouse_teleop.return_to_joint_state:main",
         ],
     },
 )

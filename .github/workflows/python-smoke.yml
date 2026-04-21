@@ -17,7 +17,8 @@ jobs:
           python -m py_compile \
             flexiv_spacemouse_teleop/spacemouse_to_servo.py \
             flexiv_spacemouse_teleop/spacemouse_gn01.py \
+            flexiv_spacemouse_teleop/save_start_state.py \
+            flexiv_spacemouse_teleop/return_to_joint_state.py \
             scripts/init_gn01_once.py
       - name: Shell syntax
         run: bash -n scripts/*.sh
-

@@ -97,6 +97,10 @@ python3 scripts/init_gn01_once.py</code></pre>
         <pre><code>scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh</code></pre>
 
+        <h3>Save the return target before moving the arm</h3>
+        <pre><code>STATE_FILE=$(scripts/save_start_state.sh)
+echo "$STATE_FILE"</code></pre>
+
         <h2>Axis Tuning</h2>
         <p>If an axis feels reversed, edit <code>config/spacemouse_teleop.yaml</code>:</p>
         <pre><code>sign_lx: 1.0
@@ -121,6 +125,21 @@ scripts/run_zed_rgb_camera.sh</code></pre>
 scripts/record_demo.sh</code></pre>
         <p>The default output path is:</p>
         <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS</code></pre>
+
+        <h2>Restore After Teleoperation</h2>
+        <p>Restore while the robot driver and controller are still running:</p>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/restore_start_state.sh "$STATE_FILE" --execute
+scripts/stop_ros_stack.sh</code></pre>
+        <div class="callout">
+          The restore command sends a FollowJointTrajectory goal to the arm
+          controller, so it requires the explicit <code>--execute</code> flag.
+          Without that flag it only prints a dry-run summary. By default it
+          restores only arm joints matching <code>joint1</code> through
+          <code>joint7</code>, so gripper joints are not sent to the arm
+          controller. It restores the arm joint position, not objects, cables,
+          camera poses, or grasped items.
+        </div>
       </article>
     </main>
 

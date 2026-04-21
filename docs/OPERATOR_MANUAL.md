@@ -81,6 +81,13 @@ scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh
 ```
 
+8. Save the return target before moving the arm:
+
+```bash
+STATE_FILE=$(scripts/save_start_state.sh)
+echo "$STATE_FILE"
+```
+
 ## Axis Tuning
 
 If an axis feels reversed, edit `config/spacemouse_teleop.yaml`:
@@ -139,3 +146,21 @@ The default output path is:
 ```
 
 Stop with `Ctrl-C`.
+
+## Restore After Teleoperation
+
+Restore while the robot driver and controller are still running:
+
+```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/restore_start_state.sh "$STATE_FILE" --execute
+scripts/stop_ros_stack.sh
+```
+
+The restore tool sends a `FollowJointTrajectory` goal to
+`/rizon_arm_controller/follow_joint_trajectory`. It requires `--execute` before
+it moves the robot; without `--execute`, it prints a dry-run summary. By
+default it restores only arm joints matching `joint1` through `joint7`, so
+gripper joints are not sent to the arm controller. This restores the arm joint
+position, not the positions of objects, cables, cameras, or the gripper grasped
+object.

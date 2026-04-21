@@ -40,6 +40,7 @@ sudo apt install -y \
   ros-humble-desktop \
   ros-dev-tools \
   ros-humble-control-toolbox \
+  ros-humble-control-msgs \
   ros-humble-hardware-interface \
   ros-humble-joint-state-publisher \
   ros-humble-joint-state-publisher-gui \

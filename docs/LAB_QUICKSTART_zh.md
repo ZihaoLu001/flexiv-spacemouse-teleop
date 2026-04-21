@@ -68,6 +68,13 @@ scripts/start_servo.sh
 scripts/run_spacemouse_bridge.sh
 ```
 
+开始动机械臂之前，保存本次 teleop 的起始关节状态：
+
+```bash
+STATE_FILE=$(scripts/save_start_state.sh)
+echo "$STATE_FILE"
+```
+
 ## 录 demos
 
 需要图像观测时，先开 ZED 2i RGB：
@@ -93,3 +100,17 @@ scripts/record_demo.sh
 ```text
 ~/teleop_demos/YYYYMMDD_HHMMSS
 ```
+
+## 恢复到 teleop 开始时的姿态
+
+结束 teleop 时，先让机械臂回到刚才保存的起始关节状态，再停 ROS stack：
+
+```bash
+scripts/restore_start_state.sh "$STATE_FILE" --execute
+scripts/stop_ros_stack.sh
+```
+
+注意：这个命令会让机械臂运动，所以必须显式写 `--execute`。如果不加
+`--execute`，它只会打印 dry run 信息。默认只恢复 `joint1` 到 `joint7`
+这类机械臂关节，不会把 gripper joints 发给 arm controller。它恢复的是机械臂关节位置，
+不会恢复桌面物体、线缆、相机位置或被夹住的物体。
