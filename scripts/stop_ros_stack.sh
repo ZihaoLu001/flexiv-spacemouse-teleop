@@ -4,6 +4,7 @@ set -eo pipefail
 pkill -INT -f 'ros2 launch flexiv_bringup' || true
 pkill -INT -f 'ros2 launch flexiv_spacemouse_teleop' || true
 sleep 2
+pkill -TERM -f '/opt/ros/humble/lib/controller_manager/spawner' || true
 pkill -TERM -f '/opt/ros/humble/lib/controller_manager/ros2_control_node' || true
 pkill -TERM -f '/opt/ros/humble/lib/moveit_servo/servo_node_main' || true
 pkill -TERM -f '/opt/ros/humble/lib/moveit_ros_move_group/move_group' || true

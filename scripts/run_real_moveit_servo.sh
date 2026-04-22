@@ -16,7 +16,7 @@ source "$WORKSPACE/install/setup.bash"
 ros2 launch flexiv_bringup rizon_moveit.launch.py \
   robot_sn:="$ROBOT_SN" \
   rizon_type:="$RIZON_TYPE" \
-  load_gripper:=true \
+  load_gripper:="${LOAD_GRIPPER:-false}" \
   start_servo:=true \
   start_rviz:=false \
   "$@"
