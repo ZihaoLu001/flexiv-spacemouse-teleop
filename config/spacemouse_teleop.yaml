@@ -9,15 +9,15 @@ spacemouse_to_servo:
     require_enable_button: true
     enable_button_idx: 0
     linear_scale: 0.32
-    linear_x_scale: 0.32
-    linear_y_scale: 0.55
-    linear_z_scale: 0.36
-    angular_scale: 0.60
-    deadband: 0.020
-    clamp_abs: 0.75
-    smoothing_alpha: 0.60
-    max_linear_step: 0.050
-    max_angular_step: 0.090
+    linear_x_scale: 0.34
+    linear_y_scale: 0.45
+    linear_z_scale: 0.34
+    angular_scale: 0.48
+    deadband: 0.025
+    clamp_abs: 0.62
+    smoothing_alpha: 0.35
+    max_linear_step: 0.025
+    max_angular_step: 0.045
     sign_lx: 1.0
     sign_ly: -1.0
     sign_lz: -1.0

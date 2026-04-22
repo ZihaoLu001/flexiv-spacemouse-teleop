@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" viewBox="0 0 1120 610">
+  <title id="title">Flexiv SpaceMouse Teleop Runtime Graph</title>
+  <desc id="desc">Runtime data flow from SpaceMouse and ZED camera into MoveIt Servo, the Flexiv arm controller, gripper action server, recorder, and return-to-start tools.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 28px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 15px Arial, sans-serif; fill: #475569; }
+      .lane-title { font: 700 14px Arial, sans-serif; fill: #0f766e; letter-spacing: .04em; }
+      .box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 10; }
+      .box-accent { fill: #ecfeff; stroke: #0891b2; stroke-width: 1.8; rx: 10; }
+      .box-safe { fill: #f0fdf4; stroke: #16a34a; stroke-width: 1.8; rx: 10; }
+      .box-record { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.8; rx: 10; }
+      .label { font: 700 15px Arial, sans-serif; fill: #111827; }
+      .small { font: 400 12px Arial, sans-serif; fill: #475569; }
+      .topic { font: 600 12px Consolas, Menlo, monospace; fill: #1e293b; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .line-muted { stroke: #64748b; stroke-width: 1.7; fill: none; marker-end: url(#arrow); stroke-dasharray: 6 5; }
+      .note { fill: #e2e8f0; stroke: #cbd5e1; rx: 8; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1120" height="610"/>
+  <text class="title" x="40" y="48">Runtime Graph</text>
+  <text class="subtitle" x="40" y="74">SpaceMouse teleoperation, GN01 gripper control, ZED recording, and return-to-start safety tools.</text>
+
+  <text class="lane-title" x="60" y="126">INPUT</text>
+  <text class="lane-title" x="330" y="126">BRIDGE</text>
+  <text class="lane-title" x="610" y="126">ROBOT CONTROL</text>
+  <text class="lane-title" x="875" y="126">DATA + RECOVERY</text>
+
+  <rect class="box" x="50" y="150" width="210" height="74"/>
+  <text class="label" x="72" y="180">SpaceMouse</text>
+  <text class="small" x="72" y="202">6-DoF cap + two buttons</text>
+
+  <rect class="box" x="50" y="258" width="210" height="74"/>
+  <text class="label" x="72" y="288">ZED 2i</text>
+  <text class="small" x="72" y="310">Fixed RGB camera</text>
+
+  <rect class="box-accent" x="315" y="136" width="230" height="84"/>
+  <text class="label" x="337" y="166">spacenav_node</text>
+  <text class="topic" x="337" y="190">/spacenav/twist</text>
+  <text class="topic" x="337" y="208">/spacenav/joy</text>
+
+  <rect class="box-accent" x="315" y="252" width="230" height="74"/>
+  <text class="label" x="337" y="282">spacemouse_to_servo</text>
+  <text class="small" x="337" y="304">deadman + smoothing + ramp limits</text>
+
+  <rect class="box-accent" x="315" y="358" width="230" height="74"/>
+  <text class="label" x="337" y="388">spacemouse_gn01</text>
+  <text class="small" x="337" y="410">button toggle for open/close</text>
+
+  <rect class="box-accent" x="315" y="466" width="230" height="74"/>
+  <text class="label" x="337" y="496">v4l2_camera</text>
+  <text class="topic" x="337" y="518">/zed2i/image_raw/compressed</text>
+
+  <rect class="box-safe" x="600" y="142" width="230" height="78"/>
+  <text class="label" x="622" y="172">MoveIt Servo</text>
+  <text class="topic" x="622" y="194">/servo_node/delta_twist_cmds</text>
+
+  <rect class="box-safe" x="600" y="266" width="230" height="78"/>
+  <text class="label" x="622" y="296">Rizon arm controller</text>
+  <text class="topic" x="622" y="318">/rizon_arm_controller/...</text>
+
+  <rect class="box-safe" x="600" y="386" width="230" height="78"/>
+  <text class="label" x="622" y="416">Flexiv gripper node</text>
+  <text class="topic" x="622" y="438">/flexiv_gripper_node/...</text>
+
+  <rect class="box-record" x="870" y="150" width="210" height="82"/>
+  <text class="label" x="892" y="180">rosbag recorder</text>
+  <text class="small" x="892" y="202">compressed camera + robot state</text>
+
+  <rect class="box-record" x="870" y="276" width="210" height="82"/>
+  <text class="label" x="892" y="306">save_start_state</text>
+  <text class="topic" x="892" y="328">/joint_states</text>
+
+  <rect class="box-record" x="870" y="402" width="210" height="82"/>
+  <text class="label" x="892" y="432">return_to_joint_state</text>
+  <text class="small" x="892" y="454">8 s conservative home return</text>
+
+  <path class="line" d="M 260 187 C 284 187 288 178 315 178"/>
+  <path class="line" d="M 430 220 L 430 252"/>
+  <path class="line" d="M 545 289 C 570 289 575 181 600 181"/>
+  <path class="line" d="M 715 220 L 715 266"/>
+  <path class="line" d="M 260 295 C 286 295 292 503 315 503"/>
+  <path class="line" d="M 545 503 C 690 503 720 191 870 191"/>
+  <path class="line" d="M 545 395 C 570 395 575 425 600 425"/>
+  <path class="line-muted" d="M 830 181 C 850 181 850 191 870 191"/>
+  <path class="line-muted" d="M 830 305 C 850 305 850 191 870 191"/>
+  <path class="line-muted" d="M 830 425 C 850 425 850 191 870 191"/>
+  <path class="line" d="M 975 358 L 975 402"/>
+  <path class="line" d="M 870 443 C 850 443 850 305 830 305"/>
+
+  <rect class="note" x="54" y="560" width="1010" height="32"/>
+  <text class="small" x="72" y="581">Safety defaults: hold button 0 to move, use button 1 for the gripper, record compressed camera frames, and restore with the fixed lab home state after teleoperation.</text>
+</svg>

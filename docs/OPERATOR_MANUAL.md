@@ -125,8 +125,8 @@ If the robot moves too quickly, reduce:
 
 ```yaml
 linear_scale: 0.32
-linear_y_scale: 0.55
-angular_scale: 0.60
+linear_y_scale: 0.45
+angular_scale: 0.48
 ```
 
 Rebuild after config edits:

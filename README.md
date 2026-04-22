@@ -172,35 +172,22 @@ colcon build --symlink-install --packages-select flexiv_moveit_config
 
 Restart the ROS stack after changing this config.
 
-The default SpaceMouse bridge profile is intentionally responsive but still
-ramp-limited and gated by the deadman button. For the Flexiv Servo `unitless`
-input scale of `0.4`, the default `linear_scale: 0.32` maps full SpaceMouse
-deflection to about `0.13 m/s`. The lateral SpaceMouse axis uses
-`linear_y_scale: 0.55` to compensate for the slow left/right feel observed on
-the lab Rizon setup.
+The default SpaceMouse bridge profile is intentionally smooth, ramp-limited,
+and gated by the deadman button. For the Flexiv Servo `unitless` input scale of
+`0.4`, the default `linear_scale: 0.32` maps full SpaceMouse deflection to about
+`0.13 m/s`. The lateral SpaceMouse axis uses `linear_y_scale: 0.45` after lab
+testing showed that higher gains made grasping demos visibly jitter.
 - [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
 - [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 
 ## Runtime Graph
 
-```mermaid
-flowchart LR
-  sm["SpaceMouse"] --> spn["spacenav_node"]
-  spn --> twist["/spacenav/twist"]
-  spn --> joy["/spacenav/joy"]
-  twist --> bridge["spacemouse_to_servo"]
-  bridge --> servoTopic["/servo_node/delta_twist_cmds"]
-  fastState["/flexiv_arm/joint_states"] --> servo
-  servoTopic --> servo["MoveIt Servo"]
-  servo --> traj["/rizon_arm_controller/joint_trajectory"]
-  joy --> grip["spacemouse_gn01"]
-  grip --> action["/flexiv_gripper_node/gripper_action"]
-  zed["ZED 2i"] --> cam["v4l2_camera"]
-  cam --> image["/zed2i/image_raw"]
-  js["/joint_states"] --> save["save_start_state"]
-  save --> restore["return_to_joint_state"]
-  restore --> controller["/rizon_arm_controller/follow_joint_trajectory"]
-```
+<p align="center">
+  <img src="docs/assets/runtime-graph.svg" alt="Runtime data flow for SpaceMouse teleoperation, gripper control, camera recording, and return-to-start tools" width="920">
+</p>
+
+The graph is checked in as static SVG so the GitHub README does not depend on
+Mermaid rich-display availability.
 
 ## Repository Layout
 
