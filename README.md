@@ -194,7 +194,7 @@ flowchart LR
   servoTopic --> servo["MoveIt Servo"]
   servo --> traj["/rizon_arm_controller/joint_trajectory"]
   joy --> grip["spacemouse_gn01"]
-  grip --> action["/flexiv_gripper_node/move"]
+  grip --> action["/flexiv_gripper_node/gripper_action"]
   zed["ZED 2i"] --> cam["v4l2_camera"]
   cam --> image["/zed2i/image_raw"]
   js["/joint_states"] --> save["save_start_state"]

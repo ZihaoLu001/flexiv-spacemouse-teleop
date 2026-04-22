@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import rclpy
-from flexiv_msgs.action import Move
+from control_msgs.action import GripperCommand
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
@@ -15,7 +15,7 @@ class SpaceMouseGN01(Node):
         super().__init__("spacemouse_gn01")
 
         self.declare_parameter("joy_topic", "/spacenav/joy")
-        self.declare_parameter("action_name", "/flexiv_gripper_node/move")
+        self.declare_parameter("action_name", "/flexiv_gripper_node/gripper_action")
         self.declare_parameter("open_button_idx", -1)
         self.declare_parameter("close_button_idx", -1)
         self.declare_parameter("toggle_button_idx", 1)
@@ -39,7 +39,7 @@ class SpaceMouseGN01(Node):
         self.prev_buttons = []
         self.toggle_is_open = True
         self.last_warn_time = None
-        self.client = ActionClient(self, Move, self.action_name)
+        self.client = ActionClient(self, GripperCommand, self.action_name)
         self.create_subscription(Joy, self.joy_topic, self.joy_cb, 10)
 
         self.get_logger().info(f"GN01 button bridge targeting {self.action_name}")
@@ -59,10 +59,9 @@ class SpaceMouseGN01(Node):
             self._warn_server_missing()
             return
 
-        goal = Move.Goal()
-        goal.width = width
-        goal.velocity = self.velocity
-        goal.max_force = self.max_force
+        goal = GripperCommand.Goal()
+        goal.command.position = width
+        goal.command.max_effort = self.max_force
         self.client.send_goal_async(goal)
 
     def _rising_edge(self, buttons: list[int], idx: int) -> bool:

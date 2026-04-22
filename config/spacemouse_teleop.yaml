@@ -28,7 +28,7 @@ spacemouse_to_servo:
 spacemouse_gn01:
   ros__parameters:
     joy_topic: /spacenav/joy
-    action_name: /flexiv_gripper_node/move
+    action_name: /flexiv_gripper_node/gripper_action
     open_button_idx: -1
     close_button_idx: -1
     toggle_button_idx: 1
