@@ -103,8 +103,14 @@ echo "$STATE_FILE"</code></pre>
         <pre><code>scripts/check_camera_topics.sh</code></pre>
         <h3>终端 3</h3>
         <pre><code>scripts/record_demo.sh</code></pre>
+        <p>
+          默认会录 <code>/zed2i/image_raw/compressed</code>，不要直接录 raw 图像；
+          这样 demo 文件小很多，真机遥操作也更顺。只有确实需要无压缩 RGB 时再用：
+        </p>
+        <pre><code>CAMERA_MODE=raw scripts/record_demo.sh   # raw RGB，文件会很大
+CAMERA_MODE=none scripts/record_demo.sh  # 只录机器人状态，不录图像</code></pre>
         <p>默认保存到：</p>
-        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS</code></pre>
+        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS/rosbag</code></pre>
 
         <h2>恢复到 teleop 开始时的姿态</h2>
         <p>结束 teleop 时，先让机械臂回到刚才保存的起始关节状态，再停 ROS stack：</p>

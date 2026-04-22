@@ -101,13 +101,15 @@ that button and the bridge publishes zero twist.
 When gripper support is enabled, button `0` remains the motion deadman and
 button `1` toggles GN01 close/open.
 
-Start the ZED 2i fixed RGB stream in another terminal:
+Start the ZED 2i RGB stream in another terminal:
 
 ```bash
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/run_zed_rgb_camera.sh
 ```
 
-It publishes `/zed2i/image_raw` and `/zed2i/camera_info`.
+It publishes `/zed2i/image_raw`, `/zed2i/image_raw/compressed`, and
+`/zed2i/camera_info`. The demo recorder uses the compressed stream by default
+to reduce disk and CPU load during real-robot teleoperation.
 
 Before moving the arm, save the session start state:
 

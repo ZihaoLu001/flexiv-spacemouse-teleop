@@ -113,10 +113,17 @@ scripts/check_camera_topics.sh
 scripts/record_demo.sh
 ```
 
+默认会录 `/zed2i/image_raw/compressed`，不要直接录 raw 图像；这样 demo 文件小很多，真机遥操作也更顺。只有确实需要无压缩 RGB 时再用：
+
+```bash
+CAMERA_MODE=raw scripts/record_demo.sh   # raw RGB，文件会很大
+CAMERA_MODE=none scripts/record_demo.sh  # 只录机器人状态，不录图像
+```
+
 默认保存到：
 
 ```text
-~/teleop_demos/YYYYMMDD_HHMMSS
+~/teleop_demos/YYYYMMDD_HHMMSS/rosbag
 ```
 
 ## 恢复到 teleop 开始时的姿态

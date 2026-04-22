@@ -123,10 +123,17 @@ sign_az: 1.0</code></pre>
         <p>If the robot moves too quickly, reduce:</p>
         <pre><code>linear_scale: 0.32
 linear_y_scale: 0.45
-angular_scale: 0.48</code></pre>
+angular_scale: 0.48
+smoothing_alpha: 0.35
+max_linear_step: 0.025</code></pre>
+        <p>
+          This is the current lab demo profile. It is less twitchy than the
+          first bring-up profile and was tuned after black-eraser grasp tests
+          showed visible jitter at higher lateral and angular gains.
+        </p>
 
         <h2>Recording Demonstrations</h2>
-        <p>Start the ZED 2i fixed RGB stream before recording if image observations are needed:</p>
+        <p>Start the ZED 2i RGB stream before recording if image observations are needed:</p>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 scripts/run_zed_rgb_camera.sh</code></pre>
         <p>Verify the camera topic:</p>
@@ -134,8 +141,15 @@ scripts/run_zed_rgb_camera.sh</code></pre>
         <p>Start a recording terminal after the teleop stack is running:</p>
         <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 scripts/record_demo.sh</code></pre>
+        <p>
+          By default the recorder saves <code>/zed2i/image_raw/compressed</code>
+          instead of raw camera frames. This keeps the robot-state topics at high
+          rate while avoiding multi-gigabyte bags during short teleoperation demos.
+        </p>
+        <pre><code>CAMERA_MODE=raw scripts/record_demo.sh   # full raw RGB, much larger bags
+CAMERA_MODE=none scripts/record_demo.sh  # proprioception-only test recording</code></pre>
         <p>The default output path is:</p>
-        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS</code></pre>
+        <pre><code>~/teleop_demos/YYYYMMDD_HHMMSS/rosbag</code></pre>
 
         <h2>Restore After Teleoperation</h2>
         <p>Restore while the robot driver and controller are still running:</p>

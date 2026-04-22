@@ -12,7 +12,7 @@ scripts/install_owner_machine_ubuntu22_humble.sh
 
 The script installs ROS 2 Humble, MoveIt, MoveIt Servo, ros2_control,
 `spacenavd`, the ROS `spacenav` package, and the V4L2 camera tools used for
-the ZED 2i fixed RGB stream.
+the ZED 2i RGB stream used for compressed demo recording.
 
 ## 2. Fetch Flexiv ROS 2
 
