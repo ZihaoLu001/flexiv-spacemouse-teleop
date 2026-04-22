@@ -121,8 +121,8 @@ sign_ay: -1.0
 sign_az: 1.0</code></pre>
 
         <p>If the robot moves too quickly, reduce:</p>
-        <pre><code>linear_scale: 0.20
-angular_scale: 0.35</code></pre>
+        <pre><code>linear_scale: 0.30
+angular_scale: 0.55</code></pre>
 
         <h2>Recording Demonstrations</h2>
         <p>Start the ZED 2i fixed RGB stream before recording if image observations are needed:</p>
@@ -166,8 +166,8 @@ cd ~/teleop_ws
 colcon build --symlink-install --packages-select flexiv_moveit_config</code></pre>
         <p>
           This changes the Flexiv MoveIt Servo config from the default
-          <code>publish_period: 0.034</code> to <code>0.02</code>, matching the
-          50 Hz SpaceMouse bridge. It keeps
+          <code>publish_period: 0.034</code> to <code>0.01</code>, a common
+          MoveIt Servo setting for more responsive teleoperation. It keeps
           <code>online_signal_smoothing::ButterworthFilterPlugin</code>, which
           is the smoothing plugin installed in the current Ubuntu 22.04 + ROS 2
           Humble environment.

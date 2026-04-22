@@ -141,10 +141,10 @@ For real hardware, read the safety checklist first:
 ## Optional Servo Smoothing Tune
 
 The Flexiv Humble Servo config defaults to `publish_period: 0.034`, or about
-29 Hz. For SpaceMouse teleoperation, this repository publishes smoothed
-`TwistStamped` commands at 50 Hz, so the lab setup uses a conservative Servo
-period of `0.02` seconds to match that rate. The tune script backs up the
-Flexiv Servo YAML and keeps the installed-safe Butterworth smoothing plugin:
+29 Hz. For SpaceMouse teleoperation, this lab setup uses a Servo period of
+`0.01` seconds, a common MoveIt Servo setting for more responsive teleoperation.
+The tune script backs up the Flexiv Servo YAML and keeps the installed-safe
+Butterworth smoothing plugin:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
@@ -155,10 +155,10 @@ colcon build --symlink-install --packages-select flexiv_moveit_config
 
 Restart the ROS stack after changing this config.
 
-The default SpaceMouse bridge profile is intentionally "balanced": fast enough
-for tabletop teleoperation, but still ramp-limited and gated by the deadman
-button. For the Flexiv Servo `unitless` input scale of `0.4`, the default
-`linear_scale: 0.20` maps full SpaceMouse deflection to about `0.08 m/s`.
+The default SpaceMouse bridge profile is intentionally responsive but still
+ramp-limited and gated by the deadman button. For the Flexiv Servo `unitless`
+input scale of `0.4`, the default `linear_scale: 0.30` maps full SpaceMouse
+deflection to about `0.12 m/s`.
 - [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
 - [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 

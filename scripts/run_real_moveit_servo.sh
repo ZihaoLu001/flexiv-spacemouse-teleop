@@ -13,10 +13,13 @@ fi
 source /opt/ros/humble/setup.bash
 source "$WORKSPACE/install/setup.bash"
 
-if pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node|/moveit_ros_move_group/move_group' >/dev/null; then
+existing_stack="$(pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node|/moveit_ros_move_group/move_group' \
+  | grep -v -E 'pgrep -af|run_real_moveit_servo\.sh|bash -c|bash -lc|ssh lab-flexiv' || true)"
+
+if [ -n "$existing_stack" ]; then
   echo "Refusing to start: a Flexiv/MoveIt/Servo stack already appears to be running." >&2
   echo "Run scripts/stop_ros_stack.sh, wait a few seconds, then start again." >&2
-  pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node|/moveit_ros_move_group/move_group' >&2 || true
+  echo "$existing_stack" >&2
   exit 2
 fi
 

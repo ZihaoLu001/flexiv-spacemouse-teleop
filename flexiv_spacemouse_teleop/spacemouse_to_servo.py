@@ -23,13 +23,13 @@ class SpaceMouseToServo(Node):
         self.declare_parameter("enable_button_idx", 0)
 
         # MoveIt Servo config in flexiv_ros2 humble-v1.7 uses unitless commands.
-        self.declare_parameter("linear_scale", 0.20)
-        self.declare_parameter("angular_scale", 0.40)
-        self.declare_parameter("deadband", 0.02)
-        self.declare_parameter("clamp_abs", 1.0)
-        self.declare_parameter("smoothing_alpha", 0.25)
-        self.declare_parameter("max_linear_step", 0.006)
-        self.declare_parameter("max_angular_step", 0.010)
+        self.declare_parameter("linear_scale", 0.30)
+        self.declare_parameter("angular_scale", 0.55)
+        self.declare_parameter("deadband", 0.025)
+        self.declare_parameter("clamp_abs", 0.75)
+        self.declare_parameter("smoothing_alpha", 0.45)
+        self.declare_parameter("max_linear_step", 0.025)
+        self.declare_parameter("max_angular_step", 0.050)
 
         self.declare_parameter("sign_lx", 1.0)
         self.declare_parameter("sign_ly", -1.0)

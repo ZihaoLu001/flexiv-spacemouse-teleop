@@ -3,7 +3,7 @@ set -euo pipefail
 
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 SERVO_CONFIG="${SERVO_CONFIG:-$WORKSPACE/src/flexiv_ros2/flexiv_moveit_config/config/rizon_moveit_servo_config.yaml}"
-PUBLISH_PERIOD="${PUBLISH_PERIOD:-0.02}"
+PUBLISH_PERIOD="${PUBLISH_PERIOD:-0.01}"
 SMOOTHING_PLUGIN="${SMOOTHING_PLUGIN:-online_signal_smoothing::ButterworthFilterPlugin}"
 
 if [ ! -f "$SERVO_CONFIG" ]; then

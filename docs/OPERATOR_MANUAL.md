@@ -124,8 +124,8 @@ sign_az: 1.0
 If the robot moves too quickly, reduce:
 
 ```yaml
-linear_scale: 0.20
-angular_scale: 0.35
+linear_scale: 0.30
+angular_scale: 0.55
 ```
 
 Rebuild after config edits:
@@ -203,6 +203,7 @@ colcon build --symlink-install --packages-select flexiv_moveit_config
 ```
 
 This changes the Flexiv MoveIt Servo config from the default
-`publish_period: 0.034` to `0.02`, matching the 50 Hz SpaceMouse bridge. It
-keeps `online_signal_smoothing::ButterworthFilterPlugin`, which is the smoothing
+`publish_period: 0.034` to `0.01`, a common MoveIt Servo setting for more
+responsive teleoperation. It keeps
+`online_signal_smoothing::ButterworthFilterPlugin`, which is the smoothing
 plugin installed in the current Ubuntu 22.04 + ROS 2 Humble environment.
