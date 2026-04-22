@@ -185,4 +185,6 @@ default it restores only arm joints matching `joint1` through `joint7`, so
 gripper joints are not sent to the arm controller. This restores the arm joint
 position, not the positions of objects, cables, cameras, or the gripper grasped
 object. It also refuses large joint deltas or fast implied return speeds unless
-the operator explicitly passes `--force` after inspecting the robot.
+the operator explicitly passes `--force` after inspecting the robot. The restore
+script stops `/servo_node` before sending the return trajectory and checks the
+final `/joint_states` error after the action reports success.

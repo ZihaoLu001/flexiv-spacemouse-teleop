@@ -127,6 +127,10 @@ At the end of teleoperation, return to that pose before shutting down:
 The restore command moves the robot, so it requires the explicit `--execute`
 flag. Without that flag it only prints a dry-run summary. It also refuses large
 joint deltas or fast implied return speeds unless `--force` is explicitly used.
+Before sending the return trajectory, the script stops `/servo_node` so live
+teleoperation commands cannot overwrite the return goal. After the action
+reports success, it checks `/joint_states` and fails if the final joint error is
+larger than the configured tolerance.
 
 For real hardware, read the safety checklist first:
 

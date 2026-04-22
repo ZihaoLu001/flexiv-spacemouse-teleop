@@ -20,6 +20,7 @@ class JointStateReturner(Node):
     def __init__(self, joint_topic: str, controller_action: str):
         super().__init__("return_to_joint_state")
         self.current = None
+        self.update_count = 0
         self.subscription = self.create_subscription(JointState, joint_topic, self._joint_state_cb, 10)
         self.client = ActionClient(self, FollowJointTrajectory, controller_action)
 
@@ -29,15 +30,18 @@ class JointStateReturner(Node):
             for name, position in zip(msg.name, msg.position)
             if name and math.isfinite(position)
         }
+        self.update_count += 1
 
-    def wait_for_current_state(self, timeout: float):
+    def wait_for_current_state(self, timeout: float, min_update_count=None):
         deadline = self.get_clock().now().nanoseconds + int(timeout * 1e9)
-        while rclpy.ok() and self.current is None:
+        while rclpy.ok() and (
+            self.current is None or (min_update_count is not None and self.update_count <= min_update_count)
+        ):
             rclpy.spin_once(self, timeout_sec=0.1)
             if self.get_clock().now().nanoseconds > deadline:
                 raise TimeoutError("Timed out waiting for current /joint_states")
 
-    def send_goal(self, joint_names, positions, duration_sec: float, wait_timeout: float):
+    def send_goal(self, joint_names, positions, duration_sec: float, wait_timeout: float, goal_tolerance: float):
         if not self.client.wait_for_server(timeout_sec=wait_timeout):
             raise TimeoutError("FollowJointTrajectory action server is not available")
 
@@ -65,6 +69,18 @@ class JointStateReturner(Node):
             raise RuntimeError(
                 f"Return trajectory failed with error_code={result.result.error_code}: "
                 f"{result.result.error_string}"
+            )
+
+        previous_update_count = self.update_count
+        self.wait_for_current_state(wait_timeout, min_update_count=previous_update_count)
+        assert self.current is not None
+        final_errors = {name: abs(positions[name] - self.current[name]) for name in joint_names}
+        max_error = max(final_errors.values()) if final_errors else 0.0
+        print(f"Final max joint error: {max_error:.4f} rad")
+        if max_error > goal_tolerance:
+            raise RuntimeError(
+                f"Return trajectory action reported success, but final joint error {max_error:.4f} rad "
+                f"exceeds --goal-tolerance {goal_tolerance:.4f}. Stop Servo/teleop publishers and retry."
             )
 
 
@@ -122,6 +138,12 @@ def _parse_args():
     )
     parser.add_argument("--execute", action="store_true", help="Actually send the return trajectory.")
     parser.add_argument("--force", action="store_true", help="Allow joint deltas larger than --max-delta.")
+    parser.add_argument(
+        "--goal-tolerance",
+        type=float,
+        default=0.04,
+        help="Maximum allowed final per-joint error in radians after an executed return trajectory.",
+    )
     return parser.parse_args()
 
 
@@ -182,7 +204,7 @@ def main():
             print("Dry run only. Rerun with --execute to move the robot.")
             return_code = 0
         else:
-            node.send_goal(joint_names, target_positions, args.duration, args.wait_timeout)
+            node.send_goal(joint_names, target_positions, args.duration, args.wait_timeout, args.goal_tolerance)
             print("Return trajectory completed.")
             return_code = 0
     except Exception as exc:
