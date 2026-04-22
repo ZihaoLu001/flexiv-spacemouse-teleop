@@ -154,6 +154,11 @@ colcon build --symlink-install --packages-select flexiv_moveit_config
 ```
 
 Restart the ROS stack after changing this config.
+
+The default SpaceMouse bridge profile is intentionally "balanced": fast enough
+for tabletop teleoperation, but still ramp-limited and gated by the deadman
+button. For the Flexiv Servo `unitless` input scale of `0.4`, the default
+`linear_scale: 0.20` maps full SpaceMouse deflection to about `0.08 m/s`.
 - [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
 - [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 

@@ -8,13 +8,13 @@ spacemouse_to_servo:
     enable_topic: /spacenav/joy
     require_enable_button: true
     enable_button_idx: 0
-    linear_scale: 0.12
-    angular_scale: 0.25
-    deadband: 0.04
+    linear_scale: 0.20
+    angular_scale: 0.35
+    deadband: 0.035
     clamp_abs: 0.6
-    smoothing_alpha: 0.18
-    max_linear_step: 0.006
-    max_angular_step: 0.010
+    smoothing_alpha: 0.28
+    max_linear_step: 0.012
+    max_angular_step: 0.020
     sign_lx: 1.0
     sign_ly: -1.0
     sign_lz: -1.0

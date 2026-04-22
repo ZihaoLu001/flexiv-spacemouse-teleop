@@ -124,8 +124,8 @@ sign_az: 1.0
 If the robot moves too quickly, reduce:
 
 ```yaml
-linear_scale: 0.12
-angular_scale: 0.25
+linear_scale: 0.20
+angular_scale: 0.35
 ```
 
 Rebuild after config edits:
