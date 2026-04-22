@@ -24,7 +24,13 @@ class SpaceMouseToServo(Node):
 
         # MoveIt Servo config in flexiv_ros2 humble-v1.7 uses unitless commands.
         self.declare_parameter("linear_scale", 0.30)
+        self.declare_parameter("linear_x_scale", -1.0)
+        self.declare_parameter("linear_y_scale", -1.0)
+        self.declare_parameter("linear_z_scale", -1.0)
         self.declare_parameter("angular_scale", 0.55)
+        self.declare_parameter("angular_x_scale", -1.0)
+        self.declare_parameter("angular_y_scale", -1.0)
+        self.declare_parameter("angular_z_scale", -1.0)
         self.declare_parameter("deadband", 0.025)
         self.declare_parameter("clamp_abs", 0.75)
         self.declare_parameter("smoothing_alpha", 0.45)
@@ -66,6 +72,13 @@ class SpaceMouseToServo(Node):
         self.last_input_time = None
         self.enable_button_pressed = not self.require_enable_button
 
+        self.linear_x_scale = self._axis_scale("linear_x_scale", self.linear_scale)
+        self.linear_y_scale = self._axis_scale("linear_y_scale", self.linear_scale)
+        self.linear_z_scale = self._axis_scale("linear_z_scale", self.linear_scale)
+        self.angular_x_scale = self._axis_scale("angular_x_scale", self.angular_scale)
+        self.angular_y_scale = self._axis_scale("angular_y_scale", self.angular_scale)
+        self.angular_z_scale = self._axis_scale("angular_z_scale", self.angular_scale)
+
         self.create_subscription(Twist, self.input_topic, self.twist_cb, 10)
         if self.require_enable_button:
             self.create_subscription(Joy, self.enable_topic, self.joy_cb, 10)
@@ -79,6 +92,10 @@ class SpaceMouseToServo(Node):
             self.get_logger().info(
                 f"Deadman enabled: hold button {self.enable_button_idx} on {self.enable_topic} to command motion"
             )
+
+    def _axis_scale(self, parameter_name: str, fallback: float) -> float:
+        value = float(self.get_parameter(parameter_name).value)
+        return fallback if value < 0.0 else value
 
     def _apply(self, value: float, scale: float, sign: float) -> float:
         if abs(value) < self.deadband:
@@ -112,12 +129,12 @@ class SpaceMouseToServo(Node):
         msg = Twist() if self._input_is_stale() or not self.enable_button_pressed else self.latest
 
         target = Twist()
-        target.linear.x = self._apply(msg.linear.x, self.linear_scale, self.sign_lx)
-        target.linear.y = self._apply(msg.linear.y, self.linear_scale, self.sign_ly)
-        target.linear.z = self._apply(msg.linear.z, self.linear_scale, self.sign_lz)
-        target.angular.x = self._apply(msg.angular.x, self.angular_scale, self.sign_ax)
-        target.angular.y = self._apply(msg.angular.y, self.angular_scale, self.sign_ay)
-        target.angular.z = self._apply(msg.angular.z, self.angular_scale, self.sign_az)
+        target.linear.x = self._apply(msg.linear.x, self.linear_x_scale, self.sign_lx)
+        target.linear.y = self._apply(msg.linear.y, self.linear_y_scale, self.sign_ly)
+        target.linear.z = self._apply(msg.linear.z, self.linear_z_scale, self.sign_lz)
+        target.angular.x = self._apply(msg.angular.x, self.angular_x_scale, self.sign_ax)
+        target.angular.y = self._apply(msg.angular.y, self.angular_y_scale, self.sign_ay)
+        target.angular.z = self._apply(msg.angular.z, self.angular_z_scale, self.sign_az)
 
         if self._input_is_stale() or not self.enable_button_pressed:
             self.filtered = target

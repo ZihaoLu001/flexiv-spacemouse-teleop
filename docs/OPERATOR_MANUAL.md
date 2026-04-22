@@ -124,8 +124,9 @@ sign_az: 1.0
 If the robot moves too quickly, reduce:
 
 ```yaml
-linear_scale: 0.30
-angular_scale: 0.55
+linear_scale: 0.32
+linear_y_scale: 0.55
+angular_scale: 0.60
 ```
 
 Rebuild after config edits:
@@ -203,7 +204,10 @@ colcon build --symlink-install --packages-select flexiv_moveit_config
 ```
 
 This changes the Flexiv MoveIt Servo config from the default
-`publish_period: 0.034` to `0.01`, a common MoveIt Servo setting for more
-responsive teleoperation. It keeps
-`online_signal_smoothing::ButterworthFilterPlugin`, which is the smoothing
-plugin installed in the current Ubuntu 22.04 + ROS 2 Humble environment.
+`publish_period: 0.034` to `0.02` and points Servo's `joint_topic` at
+`/flexiv_arm/joint_states` instead of the slower `/joint_states` aggregate.
+Some MoveIt Servo examples use `0.01`, but this Flexiv owner machine showed
+Servo loop overruns at that rate, so `0.02` is the more stable hardware setting
+here. It keeps `online_signal_smoothing::ButterworthFilterPlugin`, which is the
+smoothing plugin installed in the current Ubuntu 22.04 + ROS 2 Humble
+environment.

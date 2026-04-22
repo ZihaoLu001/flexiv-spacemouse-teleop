@@ -141,10 +141,18 @@ For real hardware, read the safety checklist first:
 ## Optional Servo Smoothing Tune
 
 The Flexiv Humble Servo config defaults to `publish_period: 0.034`, or about
-29 Hz. For SpaceMouse teleoperation, this lab setup uses a Servo period of
-`0.01` seconds, a common MoveIt Servo setting for more responsive teleoperation.
-The tune script backs up the Flexiv Servo YAML and keeps the installed-safe
-Butterworth smoothing plugin:
+29 Hz, and subscribes Servo to `/joint_states`. On this lab setup,
+`/joint_states` is only about 30 Hz, while `/flexiv_arm/joint_states` is the
+high-rate Flexiv state stream. Following the same principle used in HERMES
+style teleoperation, the control path should use the faster robot state source
+without pushing the outgoing command rate beyond what the stack can sustain.
+
+This project therefore tunes Servo to `publish_period: 0.02`, points
+`joint_topic` at `/flexiv_arm/joint_states`, and keeps the installed-safe
+Butterworth smoothing plugin. Although some MoveIt Servo examples use `0.01`,
+this Flexiv owner machine showed Servo loop overruns at that rate, so `0.02`
+is the more stable hardware setting here. The tune script backs up the Flexiv
+Servo YAML before editing it:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
@@ -157,8 +165,10 @@ Restart the ROS stack after changing this config.
 
 The default SpaceMouse bridge profile is intentionally responsive but still
 ramp-limited and gated by the deadman button. For the Flexiv Servo `unitless`
-input scale of `0.4`, the default `linear_scale: 0.30` maps full SpaceMouse
-deflection to about `0.12 m/s`.
+input scale of `0.4`, the default `linear_scale: 0.32` maps full SpaceMouse
+deflection to about `0.13 m/s`. The lateral SpaceMouse axis uses
+`linear_y_scale: 0.55` to compensate for the slow left/right feel observed on
+the lab Rizon setup.
 - [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
 - [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 
@@ -171,6 +181,7 @@ flowchart LR
   spn --> joy["/spacenav/joy"]
   twist --> bridge["spacemouse_to_servo"]
   bridge --> servoTopic["/servo_node/delta_twist_cmds"]
+  fastState["/flexiv_arm/joint_states"] --> servo
   servoTopic --> servo["MoveIt Servo"]
   servo --> traj["/rizon_arm_controller/joint_trajectory"]
   joy --> grip["spacemouse_gn01"]
