@@ -19,6 +19,7 @@ class SpaceMouseGN01(Node):
         self.declare_parameter("open_button_idx", -1)
         self.declare_parameter("close_button_idx", -1)
         self.declare_parameter("toggle_button_idx", 1)
+        self.declare_parameter("initial_toggle_is_open", False)
         self.declare_parameter("open_width", 0.09)
         self.declare_parameter("close_width", 0.01)
         self.declare_parameter("velocity", 0.10)
@@ -30,6 +31,7 @@ class SpaceMouseGN01(Node):
         self.open_button_idx = int(self.get_parameter("open_button_idx").value)
         self.close_button_idx = int(self.get_parameter("close_button_idx").value)
         self.toggle_button_idx = int(self.get_parameter("toggle_button_idx").value)
+        self.toggle_is_open = bool(self.get_parameter("initial_toggle_is_open").value)
         self.open_width = float(self.get_parameter("open_width").value)
         self.close_width = float(self.get_parameter("close_width").value)
         self.velocity = float(self.get_parameter("velocity").value)
@@ -37,7 +39,6 @@ class SpaceMouseGN01(Node):
         self.server_wait_timeout = float(self.get_parameter("server_wait_timeout").value)
 
         self.prev_buttons = []
-        self.toggle_is_open = True
         self.last_warn_time = None
         self.client = ActionClient(self, GripperCommand, self.action_name)
         self.create_subscription(Joy, self.joy_topic, self.joy_cb, 10)

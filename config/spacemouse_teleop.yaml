@@ -32,6 +32,7 @@ spacemouse_gn01:
     open_button_idx: -1
     close_button_idx: -1
     toggle_button_idx: 1
+    initial_toggle_is_open: false
     open_width: 0.09
     close_width: 0.01
     velocity: 0.10
