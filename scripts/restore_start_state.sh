@@ -2,17 +2,25 @@
 set -eo pipefail
 
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
-STATE_FILE="${STATE_FILE:-${1:-}}"
+TELEOP_HOME_STATE_FILE="${TELEOP_HOME_STATE_FILE:-$HOME/teleop_sessions/fixed_home_state.txt}"
+STATE_FILE="${STATE_FILE:-}"
 STOP_SERVO_BEFORE_RESTORE="${STOP_SERVO_BEFORE_RESTORE:-true}"
 SERVO_STOP_SERVICE="${SERVO_STOP_SERVICE:-/servo_node/stop_servo}"
 
-if [ -z "$STATE_FILE" ]; then
-  echo "Usage: $0 <start_joint_state.json> [--execute]" >&2
-  echo "Tip: run scripts/save_start_state.sh before teleoperation starts." >&2
-  exit 2
+if [ -z "$STATE_FILE" ] && [ "${1:-}" != "" ] && [[ "${1:-}" != -* ]]; then
+  STATE_FILE="$1"
+  shift || true
 fi
 
-shift || true
+if [ -z "$STATE_FILE" ] && [ -f "$TELEOP_HOME_STATE_FILE" ]; then
+  STATE_FILE="$(tr -d '\r\n' < "$TELEOP_HOME_STATE_FILE")"
+fi
+
+if [ -z "$STATE_FILE" ]; then
+  echo "Usage: $0 [start_joint_state.json] [--execute]" >&2
+  echo "Tip: either pass a state file or create $TELEOP_HOME_STATE_FILE." >&2
+  exit 2
+fi
 
 source /opt/ros/humble/setup.bash
 source "$WORKSPACE/install/setup.bash"

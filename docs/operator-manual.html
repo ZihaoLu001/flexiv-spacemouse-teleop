@@ -143,6 +143,11 @@ scripts/record_demo.sh</code></pre>
 scripts/restore_start_state.sh "$STATE_FILE"
 scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh</code></pre>
+        <p>If your lab uses one fixed home pose, put that saved state path in:</p>
+        <pre><code>~/teleop_sessions/fixed_home_state.txt</code></pre>
+        <p>Then the restore commands can omit the state file:</p>
+        <pre><code>scripts/restore_start_state.sh
+scripts/restore_start_state.sh --execute</code></pre>
         <div class="callout">
           The restore command sends a FollowJointTrajectory goal to the arm
           controller, so it requires the explicit <code>--execute</code> flag.

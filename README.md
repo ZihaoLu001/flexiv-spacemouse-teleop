@@ -124,6 +124,15 @@ At the end of teleoperation, return to that pose before shutting down:
 ~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/stop_ros_stack.sh
 ```
 
+For a lab with a fixed home pose, store the canonical state path in
+`~/teleop_sessions/fixed_home_state.txt`. Then the restore script can use that
+pose by default:
+
+```bash
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/restore_start_state.sh
+~/teleop_ws/src/flexiv-spacemouse-teleop/scripts/restore_start_state.sh --execute
+```
+
 The restore command moves the robot, so it requires the explicit `--execute`
 flag. Without that flag it only prints a dry-run summary. It also refuses large
 joint deltas or fast implied return speeds unless `--force` is explicitly used.

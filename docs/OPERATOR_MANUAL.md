@@ -179,6 +179,19 @@ scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh
 ```
 
+If your lab uses one fixed home pose, put that saved state path in:
+
+```text
+~/teleop_sessions/fixed_home_state.txt
+```
+
+Then the restore commands can omit the state file:
+
+```bash
+scripts/restore_start_state.sh
+scripts/restore_start_state.sh --execute
+```
+
 The restore tool sends a `FollowJointTrajectory` goal to
 `/rizon_arm_controller/follow_joint_trajectory`. It requires `--execute` before
 it moves the robot; without `--execute`, it prints a dry-run summary. By
