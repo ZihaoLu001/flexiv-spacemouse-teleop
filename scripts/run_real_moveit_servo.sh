@@ -13,6 +13,13 @@ fi
 source /opt/ros/humble/setup.bash
 source "$WORKSPACE/install/setup.bash"
 
+if pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node|/moveit_ros_move_group/move_group' >/dev/null; then
+  echo "Refusing to start: a Flexiv/MoveIt/Servo stack already appears to be running." >&2
+  echo "Run scripts/stop_ros_stack.sh, wait a few seconds, then start again." >&2
+  pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node|/moveit_ros_move_group/move_group' >&2 || true
+  exit 2
+fi
+
 ros2 launch flexiv_bringup rizon_moveit.launch.py \
   robot_sn:="$ROBOT_SN" \
   rizon_type:="$RIZON_TYPE" \
