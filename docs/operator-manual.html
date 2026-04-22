@@ -115,14 +115,14 @@ echo "$STATE_FILE"</code></pre>
         <p>If an axis feels reversed, edit <code>config/spacemouse_teleop.yaml</code>:</p>
         <pre><code>sign_lx: 1.0
 sign_ly: -1.0
-sign_lz: 1.0
+sign_lz: -1.0
 sign_ax: 1.0
 sign_ay: -1.0
 sign_az: 1.0</code></pre>
 
         <p>If the robot moves too quickly, reduce:</p>
-        <pre><code>linear_scale: 0.20
-angular_scale: 0.40</code></pre>
+        <pre><code>linear_scale: 0.12
+angular_scale: 0.25</code></pre>
 
         <h2>Recording Demonstrations</h2>
         <p>Start the ZED 2i fixed RGB stream before recording if image observations are needed:</p>
@@ -153,6 +153,25 @@ scripts/stop_ros_stack.sh</code></pre>
           fast implied return speeds unless the operator explicitly passes
           <code>--force</code> after inspecting the robot.
         </div>
+
+        <h2>Optional Smoothing Tune</h2>
+        <p>
+          If the arm feels slightly steppy during SpaceMouse control, tune the
+          Flexiv Servo publish period while the robot is at a safe rest pose:
+        </p>
+        <pre><code>cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/stop_ros_stack.sh
+scripts/tune_flexiv_servo_smooth.sh
+cd ~/teleop_ws
+colcon build --symlink-install --packages-select flexiv_moveit_config</code></pre>
+        <p>
+          This changes the Flexiv MoveIt Servo config from the default
+          <code>publish_period: 0.034</code> to <code>0.02</code>, matching the
+          50 Hz SpaceMouse bridge. It keeps
+          <code>online_signal_smoothing::ButterworthFilterPlugin</code>, which
+          is the smoothing plugin installed in the current Ubuntu 22.04 + ROS 2
+          Humble environment.
+        </p>
       </article>
     </main>
 

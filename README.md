@@ -137,6 +137,23 @@ For real hardware, read the safety checklist first:
 - [Project website](https://zihaolu001.github.io/flexiv-spacemouse-teleop/)
 - [Operator manual](https://zihaolu001.github.io/flexiv-spacemouse-teleop/operator-manual.html)
 - [Safety checklist](https://zihaolu001.github.io/flexiv-spacemouse-teleop/safety.html)
+
+## Optional Servo Smoothing Tune
+
+The Flexiv Humble Servo config defaults to `publish_period: 0.034`, or about
+29 Hz. For SpaceMouse teleoperation, this repository publishes smoothed
+`TwistStamped` commands at 50 Hz, so the lab setup uses a conservative Servo
+period of `0.02` seconds to match that rate. The tune script backs up the
+Flexiv Servo YAML and keeps the installed-safe Butterworth smoothing plugin:
+
+```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/tune_flexiv_servo_smooth.sh
+cd ~/teleop_ws
+colcon build --symlink-install --packages-select flexiv_moveit_config
+```
+
+Restart the ROS stack after changing this config.
 - [Troubleshooting guide](https://zihaolu001.github.io/flexiv-spacemouse-teleop/troubleshooting.html)
 - [Chinese lab quickstart](https://zihaolu001.github.io/flexiv-spacemouse-teleop/lab-quickstart-zh.html)
 

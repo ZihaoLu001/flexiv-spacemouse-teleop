@@ -115,7 +115,7 @@ If an axis feels reversed, edit `config/spacemouse_teleop.yaml`:
 ```yaml
 sign_lx: 1.0
 sign_ly: -1.0
-sign_lz: 1.0
+sign_lz: -1.0
 sign_ax: 1.0
 sign_ay: -1.0
 sign_az: 1.0
@@ -124,8 +124,8 @@ sign_az: 1.0
 If the robot moves too quickly, reduce:
 
 ```yaml
-linear_scale: 0.20
-angular_scale: 0.40
+linear_scale: 0.12
+angular_scale: 0.25
 ```
 
 Rebuild after config edits:
@@ -188,3 +188,21 @@ object. It also refuses large joint deltas or fast implied return speeds unless
 the operator explicitly passes `--force` after inspecting the robot. The restore
 script stops `/servo_node` before sending the return trajectory and checks the
 final `/joint_states` error after the action reports success.
+
+## Optional Smoothing Tune
+
+If the arm feels slightly steppy during SpaceMouse control, tune the Flexiv
+Servo publish period while the robot is at a safe rest pose:
+
+```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/stop_ros_stack.sh
+scripts/tune_flexiv_servo_smooth.sh
+cd ~/teleop_ws
+colcon build --symlink-install --packages-select flexiv_moveit_config
+```
+
+This changes the Flexiv MoveIt Servo config from the default
+`publish_period: 0.034` to `0.02`, matching the 50 Hz SpaceMouse bridge. It
+keeps `online_signal_smoothing::ButterworthFilterPlugin`, which is the smoothing
+plugin installed in the current Ubuntu 22.04 + ROS 2 Humble environment.
