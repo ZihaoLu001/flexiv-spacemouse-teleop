@@ -79,8 +79,9 @@ scripts/doctor.sh
 ```
 
 `doctor.sh` exits non-zero and prints `PROBLEM:` lines if anything is missing
-or misconfigured (ROS packages, `flexivrdk` version pairing, Servo config
-safety keys, `spacenavd`, robot network, ...).
+or misconfigured (workspace and ROS packages, `flexivrdk` version pairing,
+Servo config safety keys, `spacenavd` and SpaceMouse presence, ...). It also
+reports camera and robot-network status.
 
 ## 7. Run It
 

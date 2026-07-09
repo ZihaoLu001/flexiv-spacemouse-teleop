@@ -167,7 +167,7 @@ restarting the launch (or `teleop.sh`) picks up the change.
 
 The default profile is intentionally smooth, ramp-limited, and deadman-gated:
 
-- Commands are unitless in `[-1, 1]` toward Servo, but the bridge clamps its
+- Servo consumes unitless joystick-style commands; the bridge clamps its
   output to `clamp_abs: 0.62` (the node's built-in default is `0.75`).
 - Servo maps unitless commands with `scale.linear: 0.4` m/s and
   `scale.rotational: 0.8` rad/s, so the default `linear_scale: 0.32` maps full

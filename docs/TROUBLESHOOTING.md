@@ -2,7 +2,8 @@
 
 Start with the environment check — it exits non-zero and prints a `PROBLEM:`
 line for every issue it finds (missing packages, `flexivrdk` version pairing,
-Servo config safety keys, `spacenavd`, robot network, ...):
+Servo config safety keys, `spacenavd` and SpaceMouse presence, ...), and
+reports camera and robot-network status:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
