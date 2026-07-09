@@ -75,7 +75,8 @@ if ! systemctl is-active --quiet spacenavd; then
   sudo systemctl start spacenavd || die "spacenavd could not be started; SpaceMouse input will not work."
 fi
 
-SERVO_CONFIG="$WORKSPACE/src/flexiv_ros2/flexiv_moveit_config/config/rizon_moveit_servo_config.yaml"
+SERVO_CONFIG="${SERVO_CONFIG:-$WORKSPACE/src/flexiv_ros2/flexiv_moveit_config/config/rizon_moveit_servo_config.yaml}"
+export SERVO_CONFIG
 if ! "$REPO_DIR/scripts/apply_servo_config.sh" --check >/dev/null 2>&1; then
   say "Servo config in flexiv_ros2 differs from the repo-managed version; installing it..."
   "$REPO_DIR/scripts/apply_servo_config.sh"
