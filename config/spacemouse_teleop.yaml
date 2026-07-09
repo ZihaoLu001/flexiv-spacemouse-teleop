@@ -24,6 +24,10 @@ spacemouse_to_servo:
     sign_ax: 1.0
     sign_ay: -1.0
     sign_az: 1.0
+    # Signs above are calibrated for commands interpreted in the robot BASE
+    # frame (robot_link_command_frame in config/rizon_moveit_servo_config.lab.yaml).
+    # If you change the command frame, re-calibrate the signs.
+    publish_when_idle: true
 
 spacemouse_gn01:
   ros__parameters:
@@ -35,6 +39,6 @@ spacemouse_gn01:
     initial_toggle_is_open: false
     open_width: 0.09
     close_width: 0.01
-    velocity: 0.10
+    # flexiv_ros2 humble-v1.7's gripper server ignores max_effort (it moves the
+    # GN01 with internal constants); kept for forward compatibility.
     max_force: 20.0
-    server_wait_timeout: 0.5

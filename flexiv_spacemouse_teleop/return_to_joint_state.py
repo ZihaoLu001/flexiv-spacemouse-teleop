@@ -61,7 +61,15 @@ class JointStateReturner(Node):
             raise RuntimeError("Return trajectory goal was rejected")
 
         result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
+        try:
+            rclpy.spin_until_future_complete(self, result_future)
+        except KeyboardInterrupt:
+            # Without an explicit cancel the controller would keep executing
+            # the trajectory after this process exits.
+            print("\nInterrupted: cancelling the return trajectory...", file=sys.stderr)
+            cancel_future = goal_handle.cancel_goal_async()
+            rclpy.spin_until_future_complete(self, cancel_future, timeout_sec=2.0)
+            raise RuntimeError("Return trajectory was interrupted and cancelled")
         result = result_future.result()
         if result is None:
             raise RuntimeError("Return trajectory did not return a result")
@@ -103,7 +111,13 @@ def _parse_joint_filter(value: str):
 
 def _parse_args():
     parser = argparse.ArgumentParser(
-        description="Return the arm to a saved teleoperation start joint state."
+        description=(
+            "Return the arm to a saved teleoperation start joint state. "
+            "WARNING: this commands a direct joint-space interpolation with NO "
+            "collision checking; visually confirm the straight-line joint path "
+            "is clear of obstacles before --execute, and never use it to "
+            "recover from a collision or E-stop without inspecting the scene."
+        )
     )
     parser.add_argument("state_file", help="JSON state file created by save_start_state.")
     parser.add_argument("--joint-topic", default="/joint_states", help="Current JointState topic.")
@@ -123,7 +137,7 @@ def _parse_args():
         "--max-speed",
         type=float,
         default=0.25,
-        help="Maximum implied per-joint return speed in rad/s unless --force is passed.",
+        help="Maximum estimated peak per-joint return speed in rad/s unless --force is passed.",
     )
     parser.add_argument("--wait-timeout", type=float, default=10.0, help="Seconds to wait for ROS interfaces.")
     parser.add_argument(
@@ -176,18 +190,20 @@ def main():
         missing = [name for name in joint_names if name not in target_positions or name not in node.current]
         if missing:
             raise ValueError(f"Requested joints are missing from saved or current state: {', '.join(missing)}")
-        if len(joint_names) < 6:
+        if len(joint_names) < 7:
             raise ValueError(f"Only {len(joint_names)} joints selected; refusing to command return trajectory")
 
         deltas = {name: abs(target_positions[name] - node.current[name]) for name in joint_names}
         max_delta = max(deltas.values()) if deltas else 0.0
-        max_speed = max_delta / args.duration
+        # The controller interpolates a rest-to-rest spline, whose peak joint
+        # speed is ~1.5x the average speed; gate on the peak, not the average.
+        max_speed = 1.5 * max_delta / args.duration
 
         print(f"State file: {state_path}")
         print(f"Controller: {args.controller_action}")
         print(f"Joints: {', '.join(joint_names)}")
         print(f"Max return delta: {max_delta:.4f} rad")
-        print(f"Max implied speed: {max_speed:.4f} rad/s over {args.duration:.1f}s")
+        print(f"Estimated peak joint speed: {max_speed:.4f} rad/s over {args.duration:.1f}s")
 
         if max_delta > args.max_delta and not args.force:
             raise RuntimeError(

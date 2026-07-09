@@ -22,9 +22,10 @@ class SpaceMouseGN01(Node):
         self.declare_parameter("initial_toggle_is_open", False)
         self.declare_parameter("open_width", 0.09)
         self.declare_parameter("close_width", 0.01)
-        self.declare_parameter("velocity", 0.10)
+        # NOTE: flexiv_ros2 humble-v1.7's gripper_action server moves the GN01
+        # with fixed internal velocity/force constants and ignores max_effort.
+        # The value is still sent for forward compatibility with newer servers.
         self.declare_parameter("max_force", 20.0)
-        self.declare_parameter("server_wait_timeout", 0.5)
 
         self.joy_topic = self.get_parameter("joy_topic").value
         self.action_name = self.get_parameter("action_name").value
@@ -34,9 +35,7 @@ class SpaceMouseGN01(Node):
         self.toggle_is_open = bool(self.get_parameter("initial_toggle_is_open").value)
         self.open_width = float(self.get_parameter("open_width").value)
         self.close_width = float(self.get_parameter("close_width").value)
-        self.velocity = float(self.get_parameter("velocity").value)
         self.max_force = float(self.get_parameter("max_force").value)
-        self.server_wait_timeout = float(self.get_parameter("server_wait_timeout").value)
 
         self.prev_buttons = []
         self.last_warn_time = None
@@ -45,25 +44,47 @@ class SpaceMouseGN01(Node):
 
         self.get_logger().info(f"GN01 button bridge targeting {self.action_name}")
 
-    def _warn_server_missing(self) -> None:
+    def _throttled_warn(self, text: str) -> None:
         now = self.get_clock().now()
-        if self.last_warn_time is None:
-            should_warn = True
-        else:
-            should_warn = (now - self.last_warn_time).nanoseconds * 1e-9 > 2.0
-        if should_warn:
-            self.get_logger().warn("Gripper action server is not available yet.")
+        if (
+            self.last_warn_time is None
+            or (now - self.last_warn_time).nanoseconds * 1e-9 > 2.0
+        ):
+            self.get_logger().warn(text)
             self.last_warn_time = now
 
-    def send_move(self, width: float) -> None:
-        if not self.client.wait_for_server(timeout_sec=self.server_wait_timeout):
-            self._warn_server_missing()
+    def send_move(self, width: float, toggle_becomes_open: bool | None = None) -> None:
+        """Send a gripper goal; advance toggle state only once the goal is accepted."""
+        if not self.client.server_is_ready():
+            self._throttled_warn("Gripper action server is not available; command dropped.")
             return
 
         goal = GripperCommand.Goal()
         goal.command.position = width
         goal.command.max_effort = self.max_force
-        self.client.send_goal_async(goal)
+
+        future = self.client.send_goal_async(goal)
+
+        def _on_goal_response(fut) -> None:
+            handle = fut.result()
+            if handle is None or not handle.accepted:
+                self.get_logger().warn(f"Gripper goal (width={width:.3f}) was rejected.")
+                return
+            if toggle_becomes_open is not None:
+                self.toggle_is_open = toggle_becomes_open
+            handle.get_result_async().add_done_callback(_on_result)
+
+        def _on_result(fut) -> None:
+            result = fut.result()
+            if result is None:
+                self.get_logger().warn("Gripper action returned no result.")
+                return
+            if not result.result.reached_goal and result.result.stalled:
+                self.get_logger().info(
+                    f"Gripper stalled at {result.result.position:.3f} m (likely grasping)."
+                )
+
+        future.add_done_callback(_on_goal_response)
 
     def _rising_edge(self, buttons: list[int], idx: int) -> bool:
         if idx < 0 or idx >= len(buttons) or idx >= len(self.prev_buttons):
@@ -78,23 +99,19 @@ class SpaceMouseGN01(Node):
 
         if self._rising_edge(buttons, self.open_button_idx):
             self.get_logger().info("GN01 OPEN")
-            self.send_move(self.open_width)
-            self.toggle_is_open = True
+            self.send_move(self.open_width, toggle_becomes_open=True)
 
         if self._rising_edge(buttons, self.close_button_idx):
             self.get_logger().info("GN01 CLOSE")
-            self.send_move(self.close_width)
-            self.toggle_is_open = False
+            self.send_move(self.close_width, toggle_becomes_open=False)
 
         if self._rising_edge(buttons, self.toggle_button_idx):
             if self.toggle_is_open:
                 self.get_logger().info("GN01 TOGGLE -> CLOSE")
-                self.send_move(self.close_width)
-                self.toggle_is_open = False
+                self.send_move(self.close_width, toggle_becomes_open=False)
             else:
                 self.get_logger().info("GN01 TOGGLE -> OPEN")
-                self.send_move(self.open_width)
-                self.toggle_is_open = True
+                self.send_move(self.open_width, toggle_becomes_open=True)
 
         self.prev_buttons = buttons
 

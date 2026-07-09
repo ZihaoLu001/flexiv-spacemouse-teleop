@@ -16,4 +16,6 @@ __pycache__/
 *.sqlite
 *.mcap
 *.log
-
+# Session/demo artifacts must never live inside the source tree.
+artifacts/
+*.bak

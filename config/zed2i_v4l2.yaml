@@ -1,8 +1,12 @@
 /**:
   ros__parameters:
     video_device: /dev/video0
-    image_size: [640, 480]
+    # The ZED 2i's UVC output is a side-by-side stereo pair; 2560x720 is the
+    # HD720 mode (left+right 1280x720 each). It does NOT offer plain 640x480.
+    image_size: [2560, 720]
     pixel_format: YUYV
     output_encoding: rgb8
     camera_frame_id: zed2i_camera_frame
     camera_name: zed2i_rgb
+    # No calibration file is shipped: camera_info is uncalibrated defaults.
+    # Crop the left half (x < 1280) if you need a single RGB view downstream.

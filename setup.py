@@ -6,7 +6,7 @@ package_name = "flexiv_spacemouse_teleop"
 
 setup(
     name=package_name,
-    version="0.1.0",
+    version="0.2.0",
     packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     maintainer="Zihao Lu",
     maintainer_email="181958768+ZihaoLu001@users.noreply.github.com",
-    description="SpaceMouse teleop bridge for Flexiv Rizon with MoveIt Servo",
+    description="SpaceMouse teleoperation bridge for Flexiv Rizon arms with MoveIt Servo.",
     license="MIT",
     entry_points={
         "console_scripts": [
