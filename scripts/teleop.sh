@@ -88,20 +88,52 @@ mkdir -p "$LOG_DIR"
 say "Logs: $LOG_DIR"
 
 # ------------------------------------------------------------------ cleanup
+# Every component we start runs in its own process group (setsid), and cleanup
+# signals exactly those groups. We deliberately do NOT pattern-kill by process
+# name here: other projects on the machine may legitimately run their own
+# camera or ROS nodes (scripts/stop_ros_stack.sh remains the explicit big
+# hammer for a stuck stack).
 STACK_PID=""
 CAMERA_PID=""
 RECORD_PID=""
+BRIDGE_PID=""
+
+kill_group() { # pid, signal
+  [ -n "$1" ] || return 0
+  kill "-$2" "-$1" 2>/dev/null || kill "-$2" "$1" 2>/dev/null || true
+}
+
+group_alive() {
+  [ -n "$1" ] && kill -0 "$1" 2>/dev/null
+}
 
 cleanup() {
   trap - INT TERM EXIT
   echo
-  [ -n "$RECORD_PID" ] && kill -INT "$RECORD_PID" 2>/dev/null || true
-  [ -n "$CAMERA_PID" ] && kill -INT "$CAMERA_PID" 2>/dev/null || true
+  for pid in "$RECORD_PID" "$CAMERA_PID" "$BRIDGE_PID"; do
+    kill_group "$pid" INT
+  done
   if [ "$KEEP_STACK" = "true" ]; then
     say "Leaving the robot stack running (--keep-stack). Stop it later with scripts/stop_ros_stack.sh"
   else
     say "Shutting down the ROS stack..."
-    "$REPO_DIR/scripts/stop_ros_stack.sh" || true
+    kill_group "$STACK_PID" INT
+  fi
+  waited=0
+  while [ "$waited" -lt 10 ]; do
+    group_alive "$STACK_PID" || group_alive "$BRIDGE_PID" || break
+    sleep 1
+    waited=$((waited + 1))
+  done
+  for pid in "$RECORD_PID" "$CAMERA_PID" "$BRIDGE_PID"; do
+    kill_group "$pid" TERM
+  done
+  if [ "$KEEP_STACK" != "true" ] && group_alive "$STACK_PID"; then
+    kill_group "$STACK_PID" TERM
+    sleep 2
+    if group_alive "$STACK_PID"; then
+      say "Stack did not exit cleanly; run scripts/stop_ros_stack.sh if processes linger."
+    fi
   fi
   say "Done."
 }
@@ -111,11 +143,11 @@ trap cleanup INT TERM EXIT
 if [ "$MODE" = "real" ]; then
   say "Starting REAL robot stack (SN=$ROBOT_SN, gripper=$GRIPPER)..."
   ROBOT_SN="$ROBOT_SN" RIZON_TYPE="$RIZON_TYPE" LOAD_GRIPPER="$GRIPPER" \
-    "$REPO_DIR/scripts/run_real_moveit_servo.sh" >"$LOG_DIR/stack.log" 2>&1 &
+    setsid "$REPO_DIR/scripts/run_real_moveit_servo.sh" >"$LOG_DIR/stack.log" 2>&1 &
 else
   say "Starting FAKE robot stack (no hardware needed)..."
   ROBOT_SN="$ROBOT_SN" RIZON_TYPE="$RIZON_TYPE" LOAD_GRIPPER="$GRIPPER" \
-    "$REPO_DIR/scripts/run_fake_moveit_servo.sh" >"$LOG_DIR/stack.log" 2>&1 &
+    setsid "$REPO_DIR/scripts/run_fake_moveit_servo.sh" >"$LOG_DIR/stack.log" 2>&1 &
 fi
 STACK_PID=$!
 
@@ -138,13 +170,13 @@ ros2 service call /servo_node/start_servo std_srvs/srv/Trigger "{}" >/dev/null
 # ------------------------------------------------------------------- extras
 if [ "$CAMERA" = "true" ]; then
   say "Starting ZED RGB camera..."
-  "$REPO_DIR/scripts/run_zed_rgb_camera.sh" >"$LOG_DIR/camera.log" 2>&1 &
+  setsid "$REPO_DIR/scripts/run_zed_rgb_camera.sh" >"$LOG_DIR/camera.log" 2>&1 &
   CAMERA_PID=$!
 fi
 
 if [ "$RECORD" = "true" ]; then
   say "Starting demo recording..."
-  ROBOT_SN="$ROBOT_SN" "$REPO_DIR/scripts/record_demo.sh" >"$LOG_DIR/record.log" 2>&1 &
+  ROBOT_SN="$ROBOT_SN" setsid "$REPO_DIR/scripts/record_demo.sh" >"$LOG_DIR/record.log" 2>&1 &
   RECORD_PID=$!
 fi
 
@@ -155,5 +187,8 @@ say "  HOLD button 0 (left) as the deadman to move the arm."
 say "  Ctrl-C stops teleop and shuts the whole stack down."
 echo
 
-ros2 launch flexiv_spacemouse_teleop spacemouse_teleop.launch.py \
-  enable_gripper:="$GRIPPER" 2>&1 | tee "$LOG_DIR/bridge.log"
+setsid ros2 launch flexiv_spacemouse_teleop spacemouse_teleop.launch.py \
+  enable_gripper:="$GRIPPER" >"$LOG_DIR/bridge.log" 2>&1 &
+BRIDGE_PID=$!
+tail -f "$LOG_DIR/bridge.log" --pid="$BRIDGE_PID" &
+wait "$BRIDGE_PID"
