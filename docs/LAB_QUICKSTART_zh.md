@@ -45,7 +45,11 @@ ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real
 ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera --record  # 录 demo（含相机）
 ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --record           # 只录本体数据，不录图像
 ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera           # 只开 ZED 2i RGB
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --responsive       # 跟手模式（低延迟）
 ```
+
+`--responsive` 用低延迟档位：从推杆到满速约 0.1 秒（默认平滑档约 0.5 秒），
+速度上限和轴向完全相同，只是滤波更轻——手抖会更明显，精细抓取建议仍用默认档。
 
 `--record` 会把数据存到 `~/teleop_demos/<时间戳>/rosbag`，同目录有一份
 `README.txt` 记录序列号和话题清单。不加 `--camera` 时自动只录机器人本体

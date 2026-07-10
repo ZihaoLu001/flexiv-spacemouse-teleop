@@ -40,6 +40,7 @@ Useful flags (see `scripts/teleop.sh --help`):
 | `--no-gripper` | Skip the gripper model and bridge (needs a flange-frame Servo config) |
 | `--camera` | Also start the ZED 2i RGB stream |
 | `--record` | Record a demo rosbag; camera track only with `--camera`, robot-only otherwise |
+| `--responsive` | Low-lag bridge profile (~5x faster hand tracking, less filtering) |
 | `--keep-stack` | Leave the robot stack running when the script exits |
 
 Logs for each run land in `~/teleop_logs/<timestamp>/` (`stack.log`,
@@ -173,6 +174,21 @@ single source of truth — the launch file no longer overrides YAML values with
 launch-argument defaults. After editing the YAML there is nothing to recompile:
 with a `--symlink-install` build (the default in `scripts/build_workspace.sh`),
 restarting the launch (or `teleop.sh`) picks up the change.
+
+### Smooth vs Responsive
+
+Two ready-made profiles trade filtering lag against hand-tracking tightness;
+top speed and axis calibration are identical in both:
+
+- **smooth** (default, `spacemouse_teleop.yaml`): heavy EMA + slew limiting;
+  ~0.5 s from stick deflection to full speed. Best for precision grasps and
+  demo recordings without jitter.
+- **responsive** (`teleop.sh --responsive`,
+  `spacemouse_teleop.responsive.yaml`): 100 Hz bridge, light filtering;
+  ~0.1 s to full speed. The arm tracks the hand tightly, but hand tremor is
+  filtered less.
+
+`tests/test_profiles.py` keeps the two files structurally in sync.
 
 The default profile is intentionally smooth, ramp-limited, and deadman-gated:
 

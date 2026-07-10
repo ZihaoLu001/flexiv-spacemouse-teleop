@@ -14,6 +14,8 @@
 #                    flange-frame Servo config; the default uses grav_tcp)
 #   --camera         also start the ZED RGB camera stream
 #   --record         also record a demo rosbag (camera track only with --camera)
+#   --responsive     low-lag bridge profile (tracks the hand ~5x faster; less
+#                    filtering, so tremor shows — default profile is smoother)
 #   --keep-stack     leave the robot stack running when this script exits
 set -eo pipefail
 
@@ -29,6 +31,7 @@ GRIPPER=true
 CAMERA=false
 RECORD=false
 KEEP_STACK=false
+PROFILE=smooth
 
 for arg in "$@"; do
   case "$arg" in
@@ -38,6 +41,7 @@ for arg in "$@"; do
     --camera) CAMERA=true ;;
     --record) RECORD=true ;;
     --keep-stack) KEEP_STACK=true ;;
+    --responsive) PROFILE=responsive ;;
     -h|--help)
       sed -n '2,/^set /p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
       exit 0
@@ -191,8 +195,12 @@ say "Enabling Servo..."
 ros2 service call /servo_node/start_servo std_srvs/srv/Trigger "{}" >/dev/null
 
 # ------------------------------------------------------------------- bridge
+bridge_args=(enable_gripper:="$GRIPPER")
+if [ "$PROFILE" = "responsive" ]; then
+  bridge_args+=(config_file:="$REPO_DIR/config/spacemouse_teleop.responsive.yaml")
+fi
 setsid ros2 launch flexiv_spacemouse_teleop spacemouse_teleop.launch.py \
-  enable_gripper:="$GRIPPER" >"$LOG_DIR/bridge.log" 2>&1 &
+  "${bridge_args[@]}" >"$LOG_DIR/bridge.log" 2>&1 &
 BRIDGE_PID=$!
 
 wait_for_topic /spacenav/twist || die "SpaceMouse bridge did not come up; see $LOG_DIR/bridge.log"
@@ -225,7 +233,7 @@ if [ "$RECORD" = "true" ]; then
 fi
 
 # ------------------------------------------------------------------- live
-say "Teleoperation is live."
+say "Teleoperation is live ($PROFILE profile)."
 say "  HOLD button 0 (left) as the deadman to move the arm."
 [ "$GRIPPER" = "true" ] && say "  PRESS button 1 (right) to toggle the gripper."
 [ "$RECORD" = "true" ] && say "  Recording to ~/teleop_demos/ (see $LOG_DIR/record.log)."

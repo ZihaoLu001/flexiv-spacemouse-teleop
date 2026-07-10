@@ -67,6 +67,12 @@ audit is addressed, and teleoperation now starts with a single command.
   duplicates the Markdown docs (drift-prone); safety docs now document E-stop
   recovery and the return-to-start path assumptions.
 
+### Added (responsiveness)
+- `--responsive` profile (`config/spacemouse_teleop.responsive.yaml`): 100 Hz
+  bridge with light filtering, ~0.1 s stick-to-full-speed instead of ~0.5 s.
+  Same top speed, clamps, and axis calibration as the default smooth profile;
+  `tests/test_profiles.py` keeps the two files in sync.
+
 ### Review follow-ups (post-verification adversarial review)
 - `teleop.sh --record` now starts recording only after the bridge (and camera,
   with `--camera`) topics are up, records robot-only data without `--camera`
