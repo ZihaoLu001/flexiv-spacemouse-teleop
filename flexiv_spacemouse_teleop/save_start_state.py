@@ -48,7 +48,12 @@ def _parse_args():
         help="Output JSON path. Defaults to ~/teleop_sessions/<timestamp>/start_joint_state.json.",
     )
     parser.add_argument("--timeout", type=float, default=10.0, help="Seconds to wait for a valid sample.")
-    parser.add_argument("--min-joints", type=int, default=6, help="Minimum joints required in the sample.")
+    parser.add_argument(
+        "--min-joints",
+        type=int,
+        default=7,
+        help="Minimum joints required in the sample (Rizon arms have 7).",
+    )
     return parser.parse_args()
 
 

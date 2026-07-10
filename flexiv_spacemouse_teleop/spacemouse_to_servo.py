@@ -44,11 +44,20 @@ class SpaceMouseToServo(Node):
         self.declare_parameter("sign_ay", -1.0)
         self.declare_parameter("sign_az", 1.0)
 
+        # Keep publishing zero twists while idle so Servo stays active and
+        # holds position. Disable to release the arm controller to other
+        # publishers (e.g. MoveIt plans) whenever no motion is commanded.
+        self.declare_parameter("publish_when_idle", True)
+
         self.input_topic = self.get_parameter("input_topic").value
         self.output_topic = self.get_parameter("output_topic").value
         self.publish_hz = float(self.get_parameter("publish_hz").value)
+        if self.publish_hz <= 0.0:
+            raise ValueError(f"publish_hz must be > 0, got {self.publish_hz}")
         self.frame_id = self.get_parameter("frame_id").value
         self.input_timeout = float(self.get_parameter("input_timeout").value)
+        if self.input_timeout <= 0.0:
+            raise ValueError(f"input_timeout must be > 0, got {self.input_timeout}")
         self.enable_topic = self.get_parameter("enable_topic").value
         self.require_enable_button = bool(self.get_parameter("require_enable_button").value)
         self.enable_button_idx = int(self.get_parameter("enable_button_idx").value)
@@ -66,6 +75,9 @@ class SpaceMouseToServo(Node):
         self.sign_ax = float(self.get_parameter("sign_ax").value)
         self.sign_ay = float(self.get_parameter("sign_ay").value)
         self.sign_az = float(self.get_parameter("sign_az").value)
+        self.publish_when_idle = bool(self.get_parameter("publish_when_idle").value)
+        self.was_active = False
+        self.idle_zero_ticks_left = 0
 
         self.latest = Twist()
         self.filtered = Twist()
@@ -126,7 +138,11 @@ class SpaceMouseToServo(Node):
         return current + max_step * (1.0 if delta > 0.0 else -1.0)
 
     def timer_cb(self) -> None:
-        msg = Twist() if self._input_is_stale() or not self.enable_button_pressed else self.latest
+        # Evaluate the active/idle decision exactly once per tick. Re-evaluating
+        # would let the input age cross input_timeout between the two checks and
+        # publish one unfiltered full-amplitude step instead of a clean zero.
+        active = not self._input_is_stale() and self.enable_button_pressed
+        msg = self.latest if active else Twist()
 
         target = Twist()
         target.linear.x = self._apply(msg.linear.x, self.linear_x_scale, self.sign_lx)
@@ -136,9 +152,19 @@ class SpaceMouseToServo(Node):
         target.angular.y = self._apply(msg.angular.y, self.angular_y_scale, self.sign_ay)
         target.angular.z = self._apply(msg.angular.z, self.angular_z_scale, self.sign_az)
 
-        if self._input_is_stale() or not self.enable_button_pressed:
+        if not active:
             self.filtered = target
+            if not self.publish_when_idle:
+                # Send a short burst of zeros so Servo decelerates and halts,
+                # then go quiet and let other publishers own the controller.
+                if self.was_active:
+                    self.idle_zero_ticks_left = 10
+                self.was_active = False
+                if self.idle_zero_ticks_left <= 0:
+                    return
+                self.idle_zero_ticks_left -= 1
         else:
+            self.was_active = True
             alpha = self.smoothing_alpha
             next_linear_x = self.filtered.linear.x + alpha * (target.linear.x - self.filtered.linear.x)
             next_linear_y = self.filtered.linear.y + alpha * (target.linear.y - self.filtered.linear.y)

@@ -1,0 +1,52 @@
+# RESPONSIVE profile: minimal input-to-motion lag, for operators who want the
+# arm to track the hand tightly. Selected with `scripts/teleop.sh --responsive`
+# (or config_file:=.../spacemouse_teleop.responsive.yaml).
+#
+# vs the default smooth profile (spacemouse_teleop.yaml):
+#   publish_hz        50 -> 100    fresh command every Servo cycle
+#   smoothing_alpha 0.35 -> 0.75   EMA lag ~46 ms -> ~13 ms
+#   max_linear_step 0.025 -> 0.06  0 -> full speed in ~0.1 s (was ~0.5 s)
+#   max_angular_step 0.045 -> 0.09
+#
+# Speeds/clamps are IDENTICAL to the smooth profile — this changes latency,
+# not top speed. Trade-off: less filtering means hand tremor shows up in the
+# arm; for slow precision grasps the smooth profile still feels better.
+spacemouse_to_servo:
+  ros__parameters:
+    input_topic: /spacenav/twist
+    output_topic: /servo_node/delta_twist_cmds
+    publish_hz: 100.0
+    frame_id: ""
+    input_timeout: 0.25
+    enable_topic: /spacenav/joy
+    require_enable_button: true
+    enable_button_idx: 0
+    linear_scale: 0.32
+    linear_x_scale: 0.34
+    linear_y_scale: 0.45
+    linear_z_scale: 0.34
+    angular_scale: 0.48
+    deadband: 0.025
+    clamp_abs: 0.62
+    smoothing_alpha: 0.75
+    max_linear_step: 0.06
+    max_angular_step: 0.09
+    sign_lx: 1.0
+    sign_ly: -1.0
+    sign_lz: -1.0
+    sign_ax: 1.0
+    sign_ay: -1.0
+    sign_az: 1.0
+    publish_when_idle: true
+
+spacemouse_gn01:
+  ros__parameters:
+    joy_topic: /spacenav/joy
+    action_name: /flexiv_gripper_node/gripper_action
+    open_button_idx: -1
+    close_button_idx: -1
+    toggle_button_idx: 1
+    initial_toggle_is_open: false
+    open_width: 0.09
+    close_width: 0.01
+    max_force: 20.0

@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-ROBOT_SN="${ROBOT_SN:-Rizon4s-062626}"
+if [ -z "${ROBOT_SN:-}" ]; then
+  echo "Refusing to record without an explicit ROBOT_SN (used to derive robot topic names)." >&2
+  echo "Example: ROBOT_SN=Rizon4s-062626 $0" >&2
+  exit 2
+fi
+
+# ROS 2 topic names cannot contain '-', flexiv_ros2 replaces it with '_'.
 ROBOT_TOPIC_NS="${ROBOT_TOPIC_NS:-/${ROBOT_SN//-/_}}"
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 OUT_DIR="${OUT_DIR:-$HOME/teleop_demos/$(date +%Y%m%d_%H%M%S)}"
@@ -12,7 +18,6 @@ CAMERA_INFO_TOPIC="${CAMERA_INFO_TOPIC:-/zed2i/camera_info}"
 
 source /opt/ros/humble/setup.bash
 source "$WORKSPACE/install/setup.bash"
-mkdir -p "$OUT_DIR"
 
 topics=(
   /spacenav/twist
@@ -46,6 +51,25 @@ case "$CAMERA_MODE" in
     ;;
 esac
 
+# Recording a topic nobody publishes produces a silently empty track; verify
+# the important ones up front so a wrong SN or a dead camera fails loudly.
+live_topics="$(ros2 topic list)"
+missing=()
+for t in "${topics[@]}"; do
+  if ! grep -Fxq "$t" <<< "$live_topics"; then
+    missing+=("$t")
+  fi
+done
+if [ "${#missing[@]}" -gt 0 ]; then
+  echo "WARNING: the following topics are not currently advertised and would record empty:" >&2
+  printf '  %s\n' "${missing[@]}" >&2
+  if [ "${ALLOW_MISSING_TOPICS:-false}" != "true" ]; then
+    echo "Start the missing publishers, or rerun with ALLOW_MISSING_TOPICS=true to record anyway." >&2
+    exit 2
+  fi
+fi
+
+mkdir -p "$OUT_DIR"
 {
   echo "robot_sn=$ROBOT_SN"
   echo "robot_topic_ns=$ROBOT_TOPIC_NS"

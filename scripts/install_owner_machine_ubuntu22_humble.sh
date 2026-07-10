@@ -8,12 +8,12 @@ if ! grep -q "22.04" /etc/os-release; then
   exit 1
 fi
 
+# Enable universe BEFORE the first install: spacenavd/libspnav-dev live there.
+sudo add-apt-repository universe -y
 sudo apt update
 sudo apt install -y \
   curl ca-certificates git build-essential software-properties-common gnupg lsb-release \
   wget cmake python3-pip libeigen3-dev spacenavd libspnav-dev v4l-utils
-
-sudo add-apt-repository universe -y
 
 if ! dpkg-query -W -f='${Status}' ros2-apt-source 2>/dev/null | grep -q 'install ok installed'; then
   ROS_APT_SOURCE_VERSION="$(
@@ -59,6 +59,10 @@ sudo apt install -y \
   ros-humble-tinyxml2-vendor \
   ros-humble-warehouse-ros-sqlite \
   ros-humble-xacro
+
+# Flexiv RDK Python bindings, used by scripts/init_gn01_once.py for one-time
+# gripper initialization. The version MUST match the robot software (v1.7).
+pip3 install --user 'flexivrdk==1.7.0'
 
 if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
   sudo rosdep init || true

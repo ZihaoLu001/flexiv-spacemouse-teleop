@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Python syntax
+        run: python -m py_compile flexiv_spacemouse_teleop/*.py scripts/*.py tests/*.py
+      - name: Shell syntax
+        run: bash -n scripts/*.sh
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    container: ros:humble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/flexiv_spacemouse_teleop
+      - name: Install dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro humble
+          rosdep install --from-paths src --ignore-src --rosdistro humble -y
+          apt-get install -y python3-pytest
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select flexiv_spacemouse_teleop
+      - name: Test
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --packages-select flexiv_spacemouse_teleop --event-handlers console_cohesion+
+          colcon test-result --verbose

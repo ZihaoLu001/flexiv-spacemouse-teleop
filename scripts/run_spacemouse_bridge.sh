@@ -5,7 +5,9 @@ WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 source /opt/ros/humble/setup.bash
 source "$WORKSPACE/install/setup.bash"
 
-existing_bridge="$(pgrep -af 'spacemouse_to_servo|ros2 launch flexiv_spacemouse_teleop|/spacenav/spacenav_node' \
+# Match only bridge processes, not other launches from this package (e.g. the
+# camera launch), so a running camera never blocks a bridge restart.
+existing_bridge="$(pgrep -af 'spacemouse_to_servo|spacemouse_teleop\.launch\.py|/spacenav/spacenav_node' \
   | grep -v -E 'pgrep -af|run_spacemouse_bridge\.sh|bash -c|bash -lc|ssh lab-flexiv' || true)"
 
 if [ -n "$existing_bridge" ]; then

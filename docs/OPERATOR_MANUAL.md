@@ -1,116 +1,195 @@
 # Operator Manual
 
 This manual is for running SpaceMouse teleoperation on a Flexiv Rizon arm
-through ROS 2 Humble and MoveIt Servo.
+through ROS 2 Humble and MoveIt Servo. The normal entry point is
+`scripts/teleop.sh`; the per-piece multi-terminal procedure is kept as an
+appendix for debugging.
 
 ## Required Hardware
 
-- Flexiv Rizon arm with RDK enabled
+- Flexiv Rizon arm with RDK enabled (robot software v1.7)
 - Ubuntu 22.04 owner machine on the robot network
 - 3Dconnexion SpaceMouse connected to the owner machine
 - Flexiv-GN01 gripper if using button-controlled grasping
 
-## Network Checklist
+## Preflight
 
-The owner machine should be on the robot network. For a direct connection to
-the Flexiv general port, the robot is commonly reachable at:
-
-```bash
-ping 192.168.100.1
-```
-
-If the ping fails, stop and fix networking before launching ROS.
-
-## Fake Hardware Procedure
-
-Terminal 1:
+Run the environment check first; it exits non-zero and prints `PROBLEM:` lines
+when something is wrong:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-export ROBOT_SN=Rizon4s-123456
-export RIZON_TYPE=Rizon4s
-scripts/run_fake_moveit_servo.sh
+scripts/doctor.sh
 ```
 
-Terminal 2:
+For real hardware also confirm:
+
+1. The robot workspace is clear and the emergency stop is reachable.
+2. The robot is in Remote Mode and RDK is enabled.
+3. Network: `ping 192.168.100.1` succeeds (direct connection to the Flexiv
+   general port).
+4. You have read the [safety checklist](SAFETY.md).
+
+## Fake Hardware (Recommended First)
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-scripts/start_servo.sh
-scripts/run_spacemouse_bridge.sh enable_gripper:=false
+scripts/teleop.sh
 ```
 
-Hold SpaceMouse button `0` while moving. Releasing the button sends zero twist
-commands.
-
-Terminal 3:
+The script starts the fake-hardware flexiv_ros2 stack, MoveIt Servo,
+`spacenav_node`, and both bridges, enables Servo, and prints when
+teleoperation is live. Verify the pipeline in another terminal:
 
 ```bash
 ros2 topic echo /servo_node/delta_twist_cmds
 ```
 
-Move the SpaceMouse and verify that `TwistStamped` messages change.
+Hold SpaceMouse button `0` and move the puck; the `TwistStamped` values should
+change. Release the button; they should return to zero. `Ctrl-C` in the teleop
+terminal shuts the whole stack down.
 
-## Real Hardware Procedure
+## One-Time Gripper Initialization
 
-1. Clear the robot workspace.
-2. Keep emergency stop reachable.
-3. Confirm the robot is in Remote Mode and RDK is enabled.
-4. Confirm network:
-
-```bash
-ping 192.168.100.1
-```
-
-5. Initialize the gripper once after controller power-cycle:
+After a controller power-cycle, the GN01 must be initialized once. This must
+run while the ROS stack is **stopped** — the robot accepts a single RDK
+connection and the flexiv_ros2 hardware interface holds it while running. It
+requires the `flexivrdk==1.7.0` pip package (installed by the install script)
+and an explicit serial number:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-export ROBOT_SN=<your robot serial>
-export RIZON_TYPE=Rizon4s
-python3 scripts/init_gn01_once.py
+scripts/stop_ros_stack.sh
+ROBOT_SN=Rizon4s-062626 python3 scripts/init_gn01_once.py
 ```
 
-6. Start robot, MoveIt, and Servo:
+The script follows the official RDK sequence (fault check, enable, gripper
+enable, `Tool.Switch`, init, 10 s wait) and refuses placeholder serial numbers
+or a running ROS stack.
+
+## Real Hardware Procedure
 
 ```bash
-scripts/run_real_moveit_servo.sh
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real
 ```
 
-7. In another terminal, start Servo and SpaceMouse:
+For the first real run, verify the arm axes gently before using the gripper
+button. Note that `--no-gripper` does NOT work with the default configuration:
+the repo-managed Servo config uses the `grav_tcp` end-effector frame, which
+only exists when the gripper **model** is loaded, so `teleop.sh --no-gripper`
+refuses to start (by design). To run genuinely gripper-less hardware, change
+`ee_frame_name` in `config/rizon_moveit_servo_config.lab.yaml` back to the
+flange, rerun `scripts/apply_servo_config.sh`, and re-calibrate the `sign_*`
+values.
+
+Controls:
+
+- **Button 0 (left) is the deadman.** Hold it to command motion; release it
+  immediately if anything feels wrong — the bridge then publishes zero twist.
+- **Button 1 (right) toggles the gripper** on the rising edge (press, not
+  hold): 0.09 m open / 0.01 m close. The internal open/closed state only
+  advances once the goal is accepted by the gripper action server, and
+  rejected or failed goals are logged. The flexiv_ros2 v1.7 gripper server
+  ignores `max_effort` and moves the GN01 with internal constants; the
+  `max_force` parameter is sent only for forward compatibility.
+- **Ctrl-C** stops teleop and shuts the whole stack down (unless
+  `--keep-stack`).
+
+Save the return target before moving the arm (see the next section), start with
+small deflections, and verify each translation axis before using rotation.
+Test the gripper toggle with no object first.
+
+Logs for each run are in `~/teleop_logs/<timestamp>/` (`stack.log` for the
+robot stack, `bridge.log` for the bridges).
+
+## Session Save and Restore
+
+Before moving the arm, save the start joint state:
 
 ```bash
-scripts/start_servo.sh
-```
-
-8. Save the return target before moving the arm:
-
-```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 STATE_FILE=$(scripts/save_start_state.sh)
 echo "$STATE_FILE"
 ```
 
-9. Start the SpaceMouse bridge with gripper disabled for the first real run:
+At the end of the session, return to it while the robot stack is still
+running:
 
 ```bash
-scripts/run_spacemouse_bridge.sh enable_gripper:=false
+scripts/restore_start_state.sh "$STATE_FILE"            # dry run
+scripts/restore_start_state.sh "$STATE_FILE" --execute  # moves the robot
+scripts/stop_ros_stack.sh
 ```
 
-Hold SpaceMouse button `0` while commanding motion. Release it immediately if
-anything feels wrong.
+If your lab uses one fixed home pose, put the saved state path in
+`~/teleop_sessions/fixed_home_state.txt`; then the restore commands can omit
+the state file.
 
-After the arm axes are verified, you can restart the bridge with gripper support:
+How restore behaves:
+
+- Without `--execute` it only prints a dry-run summary. It never moves the
+  robot without the explicit flag.
+- It **stops `/servo_node` first**. The bridge idles by publishing zero twists
+  at 50 Hz (`publish_when_idle: true`), so a live Servo would immediately
+  overwrite the return trajectory.
+- It sends a single `FollowJointTrajectory` goal to
+  `/rizon_arm_controller/follow_joint_trajectory` over 8 s by default. This is
+  a joint-space interpolation with **no collision checking**: visually confirm
+  the straight-line joint path is clear before `--execute`, and never use it
+  to recover from a collision or E-stop without inspecting the scene.
+- It refuses per-joint deltas above 0.7 rad and estimated **peak** joint
+  speeds above 0.25 rad/s (the controller's rest-to-rest spline peaks at
+  ~1.5x the average speed) unless you pass `--force` after inspecting the
+  robot. Increase `--duration` for a slower return.
+- It restores only arm joints matching `joint1`..`joint7` (7 required), not
+  gripper joints, objects, cables, or cameras.
+- `Ctrl-C` during execution cancels the trajectory goal instead of leaving the
+  controller executing it.
+- After the action succeeds, it checks `/joint_states` and fails if the final
+  joint error exceeds `--goal-tolerance` (0.04 rad default).
+
+## Recording Demonstrations
+
+The simplest way is to let `teleop.sh` handle it:
 
 ```bash
-scripts/run_spacemouse_bridge.sh enable_gripper:=true
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera --record
 ```
 
-With gripper support enabled, button `0` remains the arm deadman and button `1`
-toggles the GN01 between close and open. Test the toggle with no object first.
+Or run the recorder separately once the stack is up. It requires an explicit
+`ROBOT_SN` (used to derive robot topic names) and refuses to record topics
+that are not advertised, so a wrong SN or dead camera fails loudly instead of
+producing silently empty tracks:
 
-## Axis Tuning
+```bash
+ROBOT_SN=Rizon4s-062626 scripts/record_demo.sh
+```
 
-If an axis feels reversed, edit `config/spacemouse_teleop.yaml`:
+Robot topic names replace the SN's hyphen with an underscore (ROS 2 topic
+names cannot contain `-`), e.g. `/Rizon4s_062626/tcp_pose`. Camera modes:
+
+```bash
+CAMERA_MODE=raw ROBOT_SN=... scripts/record_demo.sh   # full raw RGB, much larger bags
+CAMERA_MODE=none ROBOT_SN=... scripts/record_demo.sh  # proprioception only
+```
+
+The default records `/zed2i/image_raw/compressed`. Output goes to
+`~/teleop_demos/<timestamp>/rosbag`, with a `README.txt` next to it recording
+the SN, topic list, and start time. Stop with `Ctrl-C`.
+
+Check the camera stream with `scripts/check_camera_topics.sh` (the ZED 2i
+publishes a 2560x720 side-by-side stereo pair; crop the left half downstream
+for a single RGB view).
+
+## Parameter Tuning
+
+All bridge parameters live in `config/spacemouse_teleop.yaml` — the single
+source of truth; launch arguments no longer override YAML values. With a
+`--symlink-install` build there is nothing to recompile: edit the YAML and
+restart the launch / `teleop.sh`.
+
+If an axis feels reversed, flip the matching sign:
 
 ```yaml
 sign_lx: 1.0
@@ -121,6 +200,10 @@ sign_ay: -1.0
 sign_az: 1.0
 ```
 
+These signs are calibrated for commands interpreted in the robot **base**
+frame (`robot_link_command_frame` in the repo-managed Servo config).
+Re-calibrate them if you change the command frame.
+
 If the robot moves too quickly, reduce:
 
 ```yaml
@@ -129,113 +212,72 @@ linear_y_scale: 0.45
 angular_scale: 0.48
 smoothing_alpha: 0.35
 max_linear_step: 0.025
+clamp_abs: 0.62
 ```
 
-This is the current lab demo profile. It is less twitchy than the first
-bring-up profile and was tuned after black-eraser grasp tests showed visible
-jitter at higher lateral and angular gains.
+This is the current lab demo profile, tuned after grasp tests showed visible
+jitter at higher lateral and angular gains. With Servo's unitless
+`scale.linear: 0.4`, `linear_scale: 0.32` maps full deflection to about
+0.13 m/s. The bridge clamps every command to `clamp_abs` (0.62 in the YAML;
+the node's built-in default is 0.75).
 
-Rebuild after config edits:
+`publish_when_idle: true` (default) keeps zero twists flowing at 50 Hz while
+idle so Servo holds position — and keeps ownership of the arm controller. Any
+parallel motion command is overridden while the bridge runs; stop Servo before
+sending other trajectories (the restore script does this automatically).
 
-```bash
-cd ~/teleop_ws
-colcon build --symlink-install --packages-select flexiv_spacemouse_teleop
-source install/setup.bash
-```
+Servo-side settings (publish period, frames, collision checking) live in
+`config/rizon_moveit_servo_config.lab.yaml`; change them there and re-run
+`scripts/apply_servo_config.sh` — never hand-edit the copy inside
+`flexiv_ros2`.
 
-## Recording Demonstrations
+## Troubleshooting
 
-Start the ZED 2i RGB stream before recording if image observations are needed:
+Run `scripts/doctor.sh`, check `~/teleop_logs/<timestamp>/stack.log`, then see
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+## Appendix: Manual Multi-Terminal Procedure
+
+For debugging individual pieces, the stack can be started by hand.
+
+Terminal 1 — robot stack + Servo:
 
 ```bash
 cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+# fake hardware:
+scripts/run_fake_moveit_servo.sh
+# or real hardware (LOAD_GRIPPER defaults to true):
+ROBOT_SN=Rizon4s-062626 RIZON_TYPE=Rizon4s scripts/run_real_moveit_servo.sh
+```
+
+`run_real_moveit_servo.sh` refuses to start without an explicit `ROBOT_SN`,
+refuses `LOAD_GRIPPER=false` while the Servo config uses `grav_tcp`, warns if
+collision checking is disabled, and refuses to start on top of an existing
+stack.
+
+Terminal 2 — enable Servo, save state, start the bridges:
+
+```bash
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+scripts/start_servo.sh
+STATE_FILE=$(scripts/save_start_state.sh)
+scripts/run_spacemouse_bridge.sh enable_gripper:=false   # or enable_gripper:=true
+```
+
+Terminal 3 — optional extras:
+
+```bash
 scripts/run_zed_rgb_camera.sh
-```
-
-Verify:
-
-```bash
 scripts/check_camera_topics.sh
+ROBOT_SN=Rizon4s-062626 scripts/record_demo.sh
 ```
 
-Start a recording terminal after the teleop stack is running:
+Shutdown:
 
 ```bash
-cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-scripts/record_demo.sh
-```
-
-By default the recorder saves `/zed2i/image_raw/compressed` instead of raw
-camera frames. This keeps the robot-state topics at high rate while avoiding
-multi-gigabyte bags during short teleoperation demos. Use one of these only
-when needed:
-
-```bash
-CAMERA_MODE=raw scripts/record_demo.sh   # full raw RGB, much larger bags
-CAMERA_MODE=none scripts/record_demo.sh  # proprioception-only test recording
-```
-
-The default output path is:
-
-```text
-~/teleop_demos/YYYYMMDD_HHMMSS/rosbag
-```
-
-Stop with `Ctrl-C`.
-
-## Restore After Teleoperation
-
-Restore while the robot driver and controller are still running:
-
-```bash
-cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-scripts/restore_start_state.sh "$STATE_FILE"
 scripts/restore_start_state.sh "$STATE_FILE" --execute
 scripts/stop_ros_stack.sh
 ```
 
-If your lab uses one fixed home pose, put that saved state path in:
-
-```text
-~/teleop_sessions/fixed_home_state.txt
-```
-
-Then the restore commands can omit the state file:
-
-```bash
-scripts/restore_start_state.sh
-scripts/restore_start_state.sh --execute
-```
-
-The restore tool sends a `FollowJointTrajectory` goal to
-`/rizon_arm_controller/follow_joint_trajectory`. It requires `--execute` before
-it moves the robot; without `--execute`, it prints a dry-run summary. By
-default it restores only arm joints matching `joint1` through `joint7`, so
-gripper joints are not sent to the arm controller. This restores the arm joint
-position, not the positions of objects, cables, cameras, or the gripper grasped
-object. It also refuses large joint deltas or fast implied return speeds unless
-the operator explicitly passes `--force` after inspecting the robot. The restore
-script stops `/servo_node` before sending the return trajectory and checks the
-final `/joint_states` error after the action reports success.
-
-## Optional Smoothing Tune
-
-If the arm feels slightly steppy during SpaceMouse control, tune the Flexiv
-Servo publish period while the robot is at a safe rest pose:
-
-```bash
-cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-scripts/stop_ros_stack.sh
-scripts/tune_flexiv_servo_smooth.sh
-cd ~/teleop_ws
-colcon build --symlink-install --packages-select flexiv_moveit_config
-```
-
-This changes the Flexiv MoveIt Servo config from the default
-`publish_period: 0.034` to `0.02` and points Servo's `joint_topic` at
-`/flexiv_arm/joint_states` instead of the slower `/joint_states` aggregate.
-Some MoveIt Servo examples use `0.01`, but this Flexiv owner machine showed
-Servo loop overruns at that rate, so `0.02` is the more stable hardware setting
-here. It keeps `online_signal_smoothing::ButterworthFilterPlugin`, which is the
-smoothing plugin installed in the current Ubuntu 22.04 + ROS 2 Humble
-environment.
+`stop_ros_stack.sh` verifies processes actually exit and escalates
+INT -> TERM -> KILL, reporting anything it could not stop.

@@ -1,6 +1,8 @@
 # 实验室快速手册
 
-这份手册给实验室同学用。默认 owner machine 是连接 Flexiv、SpaceMouse、相机的 Ubuntu 22.04 主机。
+这份手册给实验室同学用。默认 owner machine 是连接 Flexiv、SpaceMouse、相机的
+Ubuntu 22.04 主机。日常使用只需要一条命令；分步（多终端）流程见
+[OPERATOR_MANUAL.md](OPERATOR_MANUAL.md) 附录。
 
 ## 第一次安装
 
@@ -10,134 +12,102 @@ cd ~/teleop_ws/src
 git clone https://github.com/ZihaoLu001/flexiv-spacemouse-teleop.git
 cd flexiv-spacemouse-teleop
 
-scripts/install_owner_machine_ubuntu22_humble.sh
 scripts/fetch_flexiv_ros2_humble_v1_7.sh
+scripts/install_owner_machine_ubuntu22_humble.sh
 scripts/build_workspace.sh
-```
-
-## 每次使用前检查
-
-```bash
-cd ~/teleop_ws/src/flexiv-spacemouse-teleop
-export ROBOT_SN=<你的机器人序列号>
-export RIZON_TYPE=Rizon4s
+scripts/apply_servo_config.sh
 scripts/doctor.sh
 ```
 
-确认：
+安装脚本会装 `flexivrdk==1.7.0`（真机夹爪初始化必需，版本必须和机器人软件
+v1.7 严格配对）。`doctor.sh` 有问题会以非零退出并打印 `PROBLEM:` 行，全绿再继续。
 
-- `spacenavd` 是 active
-- `ping 192.168.100.1` 成功
-- `flexiv_spacemouse_teleop` 能被 ROS 找到
-- 没有旧的 `servo_node_main` / `move_group` / `ros2_control_node`
-
-## Fake Hardware
-
-终端 1：
+## 一键启动
 
 ```bash
-export ROBOT_SN=<你的机器人序列号>
-export RIZON_TYPE=Rizon4s
-scripts/run_fake_moveit_servo.sh
+cd ~/teleop_ws/src/flexiv-spacemouse-teleop
+
+# 无硬件（假硬件模式，随便试）：
+scripts/teleop.sh
+
+# 真机（必须显式给序列号）：
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real
 ```
 
-终端 2：
+- 按住 SpaceMouse **0 号按钮**（左键）是 deadman，按住才动，松手立即停。
+- 按一下 **1 号按钮**（右键）在夹爪开/合之间切换（0.09 m / 0.01 m）。
+- **Ctrl-C 会停掉整个 ROS stack**，不需要手动挨个关终端。
+- 日志在 `~/teleop_logs/<时间戳>/`（`stack.log`、`bridge.log`）。
+
+常用变体：
 
 ```bash
-scripts/start_servo.sh
-scripts/run_spacemouse_bridge.sh enable_gripper:=false
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera --record  # 录 demo（含相机）
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --record           # 只录本体数据，不录图像
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera           # 只开 ZED 2i RGB
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --responsive       # 跟手模式（低延迟）
 ```
 
-默认需要按住 SpaceMouse 的 0 号按钮才会转发运动命令；松开按钮会发布零速度。
+`--responsive` 用低延迟档位：从推杆到满速约 0.1 秒（默认平滑档约 0.5 秒），
+速度上限和轴向完全相同，只是滤波更轻——手抖会更明显，精细抓取建议仍用默认档。
 
-## 真机
+`--record` 会把数据存到 `~/teleop_demos/<时间戳>/rosbag`，同目录有一份
+`README.txt` 记录序列号和话题清单。不加 `--camera` 时自动只录机器人本体
+数据（CAMERA_MODE=none）。录制启动失败会立刻报错退出（不会静默丢数据）。
 
-真机前先确认急停、工作空间和 Remote Mode。
+注意：默认配置下 `--no-gripper` 会拒绝启动——Servo 配置的 `grav_tcp`
+末端帧只在加载夹爪模型时存在。这是刻意的防护，不是 bug。
 
-终端 1：
+## 真机注意事项
+
+- 真机前确认急停可及、工作空间清空、机器人在 Remote Mode，
+  `ping 192.168.100.1` 通。
+- 控制柜重新上电后，夹爪要初始化一次，而且必须在 ROS stack **停止时**做
+  （机器人只接受一个 RDK 连接）：
 
 ```bash
-export ROBOT_SN=<你的机器人序列号>
-export RIZON_TYPE=Rizon4s
-python3 scripts/init_gn01_once.py
-scripts/run_real_moveit_servo.sh
+scripts/stop_ros_stack.sh
+ROBOT_SN=Rizon4s-062626 python3 scripts/init_gn01_once.py
 ```
 
-终端 2：
+- 第一次真机建议先只轻推平移轴确认方向，方向没问题再用夹爪按钮（按钮 1）。
 
-```bash
-scripts/start_servo.sh
-```
+## 恢复到起始姿态
 
-开始动机械臂之前，保存本次 teleop 的起始关节状态：
+开始动机械臂之前，先保存起始关节状态：
 
 ```bash
 STATE_FILE=$(scripts/save_start_state.sh)
 echo "$STATE_FILE"
 ```
 
-第一次真机建议先禁用 gripper 按钮，只测机械臂：
+结束时先回起始姿态，再停 stack：
 
 ```bash
-scripts/run_spacemouse_bridge.sh enable_gripper:=false
-```
-
-按住 SpaceMouse 0 号按钮才会动；感觉不对立刻松手。
-
-机械臂方向确认没问题后，如果要启用夹爪：
-
-```bash
-scripts/run_spacemouse_bridge.sh enable_gripper:=true
-```
-
-启用 gripper 后，0 号按钮仍然是机械臂 deadman，1 号按钮在夹爪 close/open
-之间切换。第一次请空夹爪测试，不要直接抓物体。
-
-## 录 demos
-
-需要图像观测时，先开 ZED 2i RGB：
-
-```bash
-scripts/run_zed_rgb_camera.sh
-```
-
-检查相机 topic：
-
-```bash
-scripts/check_camera_topics.sh
-```
-
-终端 3：
-
-```bash
-scripts/record_demo.sh
-```
-
-默认会录 `/zed2i/image_raw/compressed`，不要直接录 raw 图像；这样 demo 文件小很多，真机遥操作也更顺。只有确实需要无压缩 RGB 时再用：
-
-```bash
-CAMERA_MODE=raw scripts/record_demo.sh   # raw RGB，文件会很大
-CAMERA_MODE=none scripts/record_demo.sh  # 只录机器人状态，不录图像
-```
-
-默认保存到：
-
-```text
-~/teleop_demos/YYYYMMDD_HHMMSS/rosbag
-```
-
-## 恢复到 teleop 开始时的姿态
-
-结束 teleop 时，先让机械臂回到刚才保存的起始关节状态，再停 ROS stack：
-
-```bash
-scripts/restore_start_state.sh "$STATE_FILE"
-scripts/restore_start_state.sh "$STATE_FILE" --execute
+scripts/restore_start_state.sh "$STATE_FILE"            # 先 dry run 看一眼
+scripts/restore_start_state.sh "$STATE_FILE" --execute  # 确认后才真的动
 scripts/stop_ros_stack.sh
 ```
 
-注意：这个命令会让机械臂运动，所以必须显式写 `--execute`。如果不加
-`--execute`，它只会打印 dry run 信息。默认只恢复 `joint1` 到 `joint7`
-这类机械臂关节，不会把 gripper joints 发给 arm controller。它恢复的是机械臂关节位置，
-不会恢复桌面物体、线缆、相机位置或被夹住的物体。默认还会拒绝过大的回程关节差和过快的回程速度；
-只有你检查过现场后才应该显式加 `--force`。
+实验室有固定 home 姿态的话，把保存的 state 文件路径写进
+`~/teleop_sessions/fixed_home_state.txt`，之后可以省略参数直接
+`scripts/restore_start_state.sh --execute`。
+
+注意：
+
+- 不加 `--execute` 只打印 dry run，绝不动机器人。
+- restore 脚本会先自动停掉 Servo（否则 teleop 的零速命令会覆盖回程轨迹）。
+- 回程是**无碰撞检查**的关节直线插值：执行前必须目视确认路径无障碍。
+- 回程距离过大或估算峰值速度过快会被拒绝；检查过现场才可以加 `--force`。
+
+## 急停之后怎么办
+
+松开急停 → 清故障（Flexiv Elements 或 RDK ClearFault）→ **重启整个 ROS
+stack**（重新跑一遍 `teleop.sh`；v1.7 驱动在故障后会静默丢弃命令）。
+禁止未检查现场就 `restore_start_state.sh --execute`。
+完整流程见 [SAFETY.md](SAFETY.md) 的 E-stop 章节。
+
+## 出问题了
+
+先跑 `scripts/doctor.sh`，再看 `~/teleop_logs/<时间戳>/stack.log`，
+然后查 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)。

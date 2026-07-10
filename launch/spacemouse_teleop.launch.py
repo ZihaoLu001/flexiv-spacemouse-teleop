@@ -4,7 +4,6 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.parameter_descriptions import ParameterValue
 
 import os
 
@@ -14,13 +13,12 @@ def generate_launch_description():
     default_config = os.path.join(share_dir, "config", "spacemouse_teleop.yaml")
 
     config_file = LaunchConfiguration("config_file")
-    servo_twist_topic = LaunchConfiguration("servo_twist_topic")
-    frame_id = LaunchConfiguration("frame_id")
     enable_gripper = LaunchConfiguration("enable_gripper")
-    require_enable_button = LaunchConfiguration("require_enable_button")
-    enable_button_idx = LaunchConfiguration("enable_button_idx")
     start_spacenav_node = LaunchConfiguration("start_spacenav_node")
 
+    # All node parameters (topics, scaling, deadman button, gripper widths)
+    # come from the YAML file only, so config/spacemouse_teleop.yaml is the
+    # single source of truth. Pass config_file:=/path/to/your.yaml to override.
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -29,29 +27,9 @@ def generate_launch_description():
                 description="YAML parameter file for the SpaceMouse bridge nodes.",
             ),
             DeclareLaunchArgument(
-                "servo_twist_topic",
-                default_value="/servo_node/delta_twist_cmds",
-                description="MoveIt Servo Cartesian twist command topic.",
-            ),
-            DeclareLaunchArgument(
-                "frame_id",
-                default_value="",
-                description="TwistStamped frame_id. Empty uses MoveIt Servo default.",
-            ),
-            DeclareLaunchArgument(
                 "enable_gripper",
                 default_value="false",
                 description="Start the SpaceMouse button to GN01 gripper bridge.",
-            ),
-            DeclareLaunchArgument(
-                "require_enable_button",
-                default_value="true",
-                description="Require holding a SpaceMouse button before forwarding motion commands.",
-            ),
-            DeclareLaunchArgument(
-                "enable_button_idx",
-                default_value="0",
-                description="SpaceMouse button index used as the motion deadman.",
             ),
             DeclareLaunchArgument(
                 "start_spacenav_node",
@@ -70,15 +48,7 @@ def generate_launch_description():
                 executable="spacemouse_to_servo",
                 name="spacemouse_to_servo",
                 output="screen",
-                parameters=[
-                    config_file,
-                    {
-                        "output_topic": servo_twist_topic,
-                        "frame_id": frame_id,
-                        "require_enable_button": ParameterValue(require_enable_button, value_type=bool),
-                        "enable_button_idx": ParameterValue(enable_button_idx, value_type=int),
-                    },
-                ],
+                parameters=[config_file],
             ),
             Node(
                 package="flexiv_spacemouse_teleop",
