@@ -167,6 +167,55 @@ one-time GN01 gripper initialization (`scripts/init_gn01_once.py`, which must
 run while the ROS stack is stopped — the robot accepts a single RDK
 connection).
 
+## Returning to the Start Pose
+
+The lab keeps a fixed "home" joint state on the control PC
+(`~/teleop_sessions/lab_home_state.json`, pointed to by
+`~/teleop_sessions/fixed_home_state.txt` — the restore script's default).
+It is the standard Rizon ready pose, saved 2026-04-22:
+
+| Joint | rad | approx. |
+| --- | --- | --- |
+| joint1 | -0.001 | 0° |
+| joint2 | -0.700 | -40° |
+| joint3 | -0.002 | 0° |
+| joint4 | +1.573 | +90° |
+| joint5 | +0.005 | 0° |
+| joint6 | +0.689 | +39° |
+| joint7 | -0.003 | 0° |
+
+The restore needs the robot stack alive (the trajectory controller executes
+the motion), so run teleop with `--keep-stack`:
+
+```bash
+# 1. Teleoperate; Ctrl-C ends teleop but keeps the robot stack up
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --keep-stack
+
+# 2. Preview the return motion (dry run, nothing moves)
+scripts/restore_start_state.sh
+
+# 3. Deltas look sane and the path is visibly clear? Execute (slow, ~8 s)
+scripts/restore_start_state.sh --execute
+
+# 4. Shut the stack down
+scripts/stop_ros_stack.sh
+```
+
+Forgot `--keep-stack`? Start the stack alone with
+`ROBOT_SN=... scripts/run_real_moveit_servo.sh` and continue from step 2.
+
+To return to *today's* pose instead of the fixed home, run
+`scripts/save_start_state.sh` **before** teleoperating and pass the printed
+file to `scripts/restore_start_state.sh <file> --execute` afterwards.
+
+Built-in guards: Servo is stopped automatically before the return (its idle
+zero-twist stream would fight the trajectory), per-joint deltas over 0.7 rad or
+an estimated peak speed over 0.25 rad/s are refused without `--force`, the
+final error is verified to ≤0.04 rad, and Ctrl-C mid-motion cancels the
+trajectory. The return is a straight joint-space interpolation with **no
+collision checking** — visually confirm the path is clear, and never restore
+blindly after a collision or E-stop.
+
 ## Tuning
 
 All bridge parameters live in `config/spacemouse_teleop.yaml`, which is the
