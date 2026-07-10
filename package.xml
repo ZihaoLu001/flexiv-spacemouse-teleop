@@ -6,8 +6,6 @@
   <maintainer email="181958768+ZihaoLu001@users.noreply.github.com">Zihao Lu</maintainer>
   <license>MIT</license>
 
-  <buildtool_depend>ament_python</buildtool_depend>
-
   <exec_depend>rclpy</exec_depend>
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>control_msgs</exec_depend>
