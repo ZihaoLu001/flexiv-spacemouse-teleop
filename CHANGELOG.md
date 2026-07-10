@@ -15,6 +15,13 @@ audit is addressed, and teleoperation now starts with a single command.
   `check_collisions: true`), installed by `scripts/apply_servo_config.sh`
   (with `--check` and `--restore`). Replaces hand-edits / `sed` of the
   vendored flexiv_ros2 tree.
+- `config/grav.srdf.lab.xacro`: GN01 gripper SRDF with the gripper-internal
+  collision pairs excluded. Root cause of April's "false collision scaling":
+  upstream's collision matrix misses these pairs and the finger tips legally
+  touch at width 0, so Servo decelerated continuously whenever the gripper was
+  closed — which is why collision checking got hand-disabled. With this SRDF,
+  `check_collisions: true` runs with zero false positives (verified on fake
+  hardware end-to-end).
 - CI now builds the package and runs unit tests on ROS 2 Humble
   (`.github/workflows/ci.yml`), plus shell syntax checks.
 - Unit tests for deadband/clamp/slew and button edge detection.

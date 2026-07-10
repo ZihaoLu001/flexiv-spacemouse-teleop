@@ -104,17 +104,26 @@ was silently disabled on the lab machine). Now:
 - `config/rizon_moveit_servo_config.lab.yaml` is the single source of truth,
   version-controlled here with a header comment documenting every delta from
   the upstream `flexiv_ros2` defaults and why it exists.
-- `scripts/apply_servo_config.sh` installs it into the `flexiv_ros2` checkout
-  (backing up the previous file), `--check` verifies the installed copy matches
-  byte-for-byte, and `--restore` puts back the pristine upstream file.
+- `config/grav.srdf.lab.xacro` is the GN01 gripper SRDF with the
+  gripper-internal collision pairs excluded. Upstream misses them, and since
+  the finger tips legally touch at width 0, Servo's proximity check otherwise
+  reports "Close to a collision, decelerating" whenever the gripper is closed —
+  the very false alarm that once led to collision checking being disabled.
+  With this SRDF, `check_collisions: true` runs with zero false positives
+  (verified end-to-end on fake hardware).
+- `scripts/apply_servo_config.sh` installs both files into the `flexiv_ros2`
+  checkout (backing up the previous ones), `--check` verifies the installed
+  copies match byte-for-byte, and `--restore` puts back the pristine upstream
+  files.
 - `scripts/teleop.sh` auto-installs the config if it drifted; `scripts/doctor.sh`
   and `scripts/run_real_moveit_servo.sh` verify the safety-relevant keys.
 
 Key settings (see the YAML header for the full rationale):
 
-- `check_collisions: true` — the upstream default, kept on. If collision
-  checking falsely triggers with the gripper model, fix the SRDF collision
-  matrix; do not turn the feature off.
+- `check_collisions: true` — the upstream default, kept on. The known false
+  trigger (closed GN01 fingers) is fixed by the repo-managed SRDF above; if a
+  new false trigger appears, extend the SRDF collision matrix — do not turn
+  the feature off.
 - `ee_frame_name: <sn>_grav_tcp` — the official GN01 open-finger TCP. This
   frame only exists when `load_gripper:=true`; the run scripts refuse to start
   otherwise.

@@ -56,10 +56,13 @@ the repo-managed config if it drifted.
 
 Do not disable it. It was once hand-disabled on the lab machine "temporarily
 for a gripper demo", which silently removed all self-collision deceleration.
-If collision checking falsely triggers with the gripper model, fix the SRDF
-collision matrix instead of turning the feature off. Any intentional change
-belongs in `config/rizon_moveit_servo_config.lab.yaml` (installed via
-`scripts/apply_servo_config.sh`) so it is recorded and reviewable.
+The false alarm behind that decision (closed GN01 finger tips permanently
+within the proximity threshold) is fixed by the repo-managed gripper SRDF
+(`config/grav.srdf.lab.xacro`, installed alongside the Servo config). If
+collision checking falsely triggers again, extend the SRDF collision matrix
+instead of turning the feature off. Any intentional change belongs in the
+repo-managed files (installed via `scripts/apply_servo_config.sh`) so it is
+recorded and reviewable.
 
 ## Return-to-Start Motions
 
