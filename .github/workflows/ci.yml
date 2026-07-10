@@ -18,12 +18,27 @@ jobs:
         run: bash -n scripts/*.sh
 
   build-and-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container: ros:humble
     steps:
-      - uses: ros-tooling/setup-ros@v0.7
+      - uses: actions/checkout@v4
         with:
-          required-ros-distributions: humble
-      - uses: ros-tooling/action-ros-ci@v0.3
-        with:
-          package-name: flexiv_spacemouse_teleop
-          target-ros2-distro: humble
+          path: src/flexiv_spacemouse_teleop
+      - name: Install dependencies
+        run: |
+          apt-get update
+          rosdep update --rosdistro humble
+          rosdep install --from-paths src --ignore-src --rosdistro humble -y
+          apt-get install -y python3-pytest
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select flexiv_spacemouse_teleop
+      - name: Test
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test --packages-select flexiv_spacemouse_teleop --event-handlers console_cohesion+
+          colcon test-result --verbose
