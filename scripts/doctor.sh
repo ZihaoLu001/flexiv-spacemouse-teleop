@@ -62,7 +62,7 @@ if python3 -c "import flexivrdk" 2>/dev/null; then
   echo "flexivrdk ${rdk_version:-unknown} OK"
   case "$rdk_version" in
     1.7.*) ;;
-    *) fail "flexivrdk $rdk_version may not match robot software v1.7; pin flexivrdk==1.7.0" ;;
+    *) fail "flexivrdk $rdk_version may not pair with robot software v3.9.x; pin flexivrdk==1.7.0" ;;
   esac
 else
   fail "flexivrdk Python package missing (pip3 install 'flexivrdk==1.7.0'); needed by scripts/init_gn01_once.py"

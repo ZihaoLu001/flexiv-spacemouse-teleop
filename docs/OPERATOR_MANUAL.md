@@ -7,7 +7,7 @@ appendix for debugging.
 
 ## Required Hardware
 
-- Flexiv Rizon arm with RDK enabled (robot software v1.7)
+- Flexiv Rizon arm with RDK enabled (robot software v3.9.x, pairs with RDK 1.7)
 - Ubuntu 22.04 owner machine on the robot network
 - 3Dconnexion SpaceMouse connected to the owner machine
 - Flexiv-GN01 gripper if using button-controlled grasping

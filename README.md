@@ -57,8 +57,8 @@ anything is misconfigured.
 | OS | Ubuntu 22.04.5 LTS |
 | ROS | ROS 2 Humble |
 | Robot stack | `flexiv_ros2` `humble-v1.7` |
-| Robot | Flexiv Rizon 4s, robot software v1.7 |
-| Flexiv RDK (Python) | `flexivrdk==1.7.0` — must pair exactly with robot software v1.7 |
+| Robot | Flexiv Rizon 4s, robot software v3.9.3 |
+| Flexiv RDK (Python) | `flexivrdk==1.7.0` — pairs with robot software v3.9.x (Flexiv compatibility table) |
 | Input device | 3Dconnexion SpaceMouse through `spacenavd` |
 | Camera | ZED 2i as USB3 V4L2 stream (2560x720 side-by-side HD720) |
 | Servoing | MoveIt Servo `servo_node_main` |

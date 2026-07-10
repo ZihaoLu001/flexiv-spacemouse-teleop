@@ -61,7 +61,8 @@ sudo apt install -y \
   ros-humble-xacro
 
 # Flexiv RDK Python bindings, used by scripts/init_gn01_once.py for one-time
-# gripper initialization. The version MUST match the robot software (v1.7).
+# gripper initialization. RDK 1.7 pairs with robot software v3.9.x (see
+# Flexiv's RDK/robot-software compatibility table).
 pip3 install --user 'flexivrdk==1.7.0'
 
 if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then

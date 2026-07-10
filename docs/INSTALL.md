@@ -15,7 +15,7 @@ scripts/fetch_flexiv_ros2_humble_v1_7.sh
 
 `fetch_flexiv_ros2_humble_v1_7.sh` clones `flexiv_ros2` at `humble-v1.7`
 (with submodules) into `~/teleop_ws/src/flexiv_ros2`. Use `humble-v1.7` to
-match robot software v1.7; on re-runs it refuses to clobber unexpected local
+pair with robot software v3.9.x; on re-runs it refuses to clobber unexpected local
 modifications (the only sanctioned local change is the Servo config installed
 in step 4).
 
@@ -31,7 +31,8 @@ MoveIt Servo, ros2_control, `spacenavd`, the ROS `spacenav` package, the V4L2
 camera tools used for the ZED 2i RGB stream, and the `flexivrdk==1.7.0` Python
 package. `flexivrdk` is required by `scripts/init_gn01_once.py` (one-time
 gripper initialization) and its version must pair exactly with the robot
-software (v1.7). It also enables the `spacenavd` service.
+software (v3.9.x pairs with RDK 1.7 per Flexiv's compatibility table). It also
+enables the `spacenavd` service.
 
 ## 3. Build
 

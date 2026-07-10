@@ -4,7 +4,8 @@
 Follows the official RDK sequence (flexiv_rdk example_py/basics6_gripper_control.py):
 clear fault -> Enable -> Gripper.Enable -> Tool.Switch -> Gripper.Init -> wait.
 
-Requires the `flexivrdk` pip package matching the robot software (v1.7 here).
+Requires the `flexivrdk` pip package paired with the robot software
+(flexivrdk 1.7 <-> robot software v3.9.x here).
 Run this ONLY while the ROS 2 stack is stopped: the robot accepts a single RDK
 connection, and flexiv_ros2's hardware interface already holds it when running.
 """
