@@ -42,13 +42,17 @@ ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real
 常用变体：
 
 ```bash
-ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --record    # 同时录 demo rosbag
-ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera    # 同时开 ZED 2i RGB
-scripts/teleop.sh --no-gripper                               # 不加载夹爪
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera --record  # 录 demo（含相机）
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --record           # 只录本体数据，不录图像
+ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --camera           # 只开 ZED 2i RGB
 ```
 
 `--record` 会把数据存到 `~/teleop_demos/<时间戳>/rosbag`，同目录有一份
-`README.txt` 记录序列号和话题清单。
+`README.txt` 记录序列号和话题清单。不加 `--camera` 时自动只录机器人本体
+数据（CAMERA_MODE=none）。录制启动失败会立刻报错退出（不会静默丢数据）。
+
+注意：默认配置下 `--no-gripper` 会拒绝启动——Servo 配置的 `grav_tcp`
+末端帧只在加载夹爪模型时存在。这是刻意的防护，不是 bug。
 
 ## 真机注意事项
 
@@ -62,7 +66,7 @@ scripts/stop_ros_stack.sh
 ROBOT_SN=Rizon4s-062626 python3 scripts/init_gn01_once.py
 ```
 
-- 第一次真机建议 `--no-gripper` 只测机械臂，方向确认没问题再开夹爪。
+- 第一次真机建议先只轻推平移轴确认方向，方向没问题再用夹爪按钮（按钮 1）。
 
 ## 恢复到起始姿态
 

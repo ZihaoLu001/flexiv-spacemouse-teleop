@@ -14,7 +14,7 @@ if [ -z "${ROBOT_SN:-}" ] || [ "$ROBOT_SN" = "Rizon4s-123456" ]; then
   exit 2
 fi
 
-if grep -q "grav_tcp" "$SERVO_CONFIG" 2>/dev/null && [ "$LOAD_GRIPPER" != "true" ]; then
+if grep -Eq '^[[:space:]]*ee_frame_name:.*grav_tcp' "$SERVO_CONFIG" 2>/dev/null && [ "$LOAD_GRIPPER" != "true" ]; then
   echo "Refusing to start: the Servo config uses the grav_tcp frame, which" >&2
   echo "only exists when the gripper model is loaded. Set LOAD_GRIPPER=true" >&2
   echo "or switch the Servo config's ee_frame_name back to the flange." >&2

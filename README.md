@@ -37,9 +37,9 @@ Useful flags (see `scripts/teleop.sh --help`):
 | Flag | Effect |
 | --- | --- |
 | `--real` / `--fake` | Real robot / fake hardware (default fake) |
-| `--no-gripper` | Skip the gripper model and button bridge |
+| `--no-gripper` | Skip the gripper model and bridge (needs a flange-frame Servo config) |
 | `--camera` | Also start the ZED 2i RGB stream |
-| `--record` | Also record a demo rosbag (robot topics must exist) |
+| `--record` | Record a demo rosbag; camera track only with `--camera`, robot-only otherwise |
 | `--keep-stack` | Leave the robot stack running when the script exits |
 
 Logs for each run land in `~/teleop_logs/<timestamp>/` (`stack.log`,

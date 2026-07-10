@@ -10,9 +10,10 @@
 # Options:
 #   --real           drive the real robot (requires ROBOT_SN)
 #   --fake           use fake hardware (default)
-#   --no-gripper     skip the gripper model and button bridge
+#   --no-gripper     skip the gripper model and button bridge (needs a
+#                    flange-frame Servo config; the default uses grav_tcp)
 #   --camera         also start the ZED RGB camera stream
-#   --record         also record a demo rosbag (implies robot topics must exist)
+#   --record         also record a demo rosbag (camera track only with --camera)
 #   --keep-stack     leave the robot stack running when this script exits
 set -eo pipefail
 
@@ -20,6 +21,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKSPACE="${WORKSPACE:-$HOME/teleop_ws}"
 RIZON_TYPE="${RIZON_TYPE:-Rizon4s}"
 SERVO_WAIT_TIMEOUT_S="${SERVO_WAIT_TIMEOUT_S:-90}"
+TOPIC_WAIT_TIMEOUT_S="${TOPIC_WAIT_TIMEOUT_S:-20}"
 LOG_DIR="${LOG_DIR:-$HOME/teleop_logs/$(date +%Y%m%d_%H%M%S)}"
 
 MODE=fake
@@ -37,7 +39,7 @@ for arg in "$@"; do
     --record) RECORD=true ;;
     --keep-stack) KEEP_STACK=true ;;
     -h|--help)
-      sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,/^set /p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
@@ -66,7 +68,7 @@ else
   ROBOT_SN="${ROBOT_SN:-Rizon4s-123456}"
 fi
 
-existing="$(pgrep -af 'ros2 launch flexiv_bringup|servo_node_main|ros2_control_node' \
+existing="$(pgrep -af 'ros2 launch flexiv_bringup|/moveit_servo/servo_node_main|/controller_manager/ros2_control_node' \
   | grep -v -E 'pgrep -af|teleop\.sh|bash -c|bash -lc|ssh ' || true)"
 [ -z "$existing" ] || die "A Flexiv/Servo stack is already running. Stop it first: scripts/stop_ros_stack.sh"$'\n'"$existing"
 
@@ -81,8 +83,8 @@ if ! "$REPO_DIR/scripts/apply_servo_config.sh" --check >/dev/null 2>&1; then
   say "Servo config in flexiv_ros2 differs from the repo-managed version; installing it..."
   "$REPO_DIR/scripts/apply_servo_config.sh"
 fi
-if grep -q "grav_tcp" "$SERVO_CONFIG" && [ "$GRIPPER" != "true" ]; then
-  die "Servo config uses the grav_tcp frame which needs the gripper model; drop --no-gripper or change ee_frame_name."
+if grep -Eq '^[[:space:]]*ee_frame_name:.*grav_tcp' "$SERVO_CONFIG" && [ "$GRIPPER" != "true" ]; then
+  die "The Servo config's ee_frame_name uses grav_tcp, which needs the gripper model; drop --no-gripper or switch ee_frame_name back to the flange."
 fi
 
 mkdir -p "$LOG_DIR"
@@ -114,31 +116,51 @@ cleanup() {
   for pid in "$RECORD_PID" "$CAMERA_PID" "$BRIDGE_PID"; do
     kill_group "$pid" INT
   done
+  wait_list=("$RECORD_PID" "$CAMERA_PID" "$BRIDGE_PID")
   if [ "$KEEP_STACK" = "true" ]; then
     say "Leaving the robot stack running (--keep-stack). Stop it later with scripts/stop_ros_stack.sh"
   else
     say "Shutting down the ROS stack..."
     kill_group "$STACK_PID" INT
+    wait_list+=("$STACK_PID")
   fi
   waited=0
-  while [ "$waited" -lt 10 ]; do
-    group_alive "$STACK_PID" || group_alive "$BRIDGE_PID" || break
+  while [ "$waited" -lt 12 ]; do
+    still=false
+    for pid in "${wait_list[@]}"; do
+      group_alive "$pid" && still=true
+    done
+    [ "$still" = false ] && break
     sleep 1
     waited=$((waited + 1))
   done
-  for pid in "$RECORD_PID" "$CAMERA_PID" "$BRIDGE_PID"; do
-    kill_group "$pid" TERM
-  done
-  if [ "$KEEP_STACK" != "true" ] && group_alive "$STACK_PID"; then
-    kill_group "$STACK_PID" TERM
-    sleep 2
-    if group_alive "$STACK_PID"; then
-      say "Stack did not exit cleanly; run scripts/stop_ros_stack.sh if processes linger."
+  for pid in "${wait_list[@]}"; do
+    if group_alive "$pid"; then
+      kill_group "$pid" TERM
     fi
-  fi
+  done
+  sleep 1
+  for pid in "${wait_list[@]}"; do
+    if group_alive "$pid"; then
+      say "A component did not exit cleanly; run scripts/stop_ros_stack.sh if processes linger."
+      break
+    fi
+  done
   say "Done."
 }
 trap cleanup INT TERM EXIT
+
+wait_for_topic() { # topic, what
+  local waited=0
+  until ros2 topic list 2>/dev/null | grep -qx "$1"; do
+    sleep 1
+    waited=$((waited + 1))
+    if [ "$waited" -ge "$TOPIC_WAIT_TIMEOUT_S" ]; then
+      return 1
+    fi
+  done
+  return 0
+}
 
 # -------------------------------------------------------------- robot stack
 if [ "$MODE" = "real" ]; then
@@ -168,28 +190,47 @@ done
 say "Enabling Servo..."
 ros2 service call /servo_node/start_servo std_srvs/srv/Trigger "{}" >/dev/null
 
+# ------------------------------------------------------------------- bridge
+setsid ros2 launch flexiv_spacemouse_teleop spacemouse_teleop.launch.py \
+  enable_gripper:="$GRIPPER" >"$LOG_DIR/bridge.log" 2>&1 &
+BRIDGE_PID=$!
+
+wait_for_topic /spacenav/twist || die "SpaceMouse bridge did not come up; see $LOG_DIR/bridge.log"
+
 # ------------------------------------------------------------------- extras
 if [ "$CAMERA" = "true" ]; then
   say "Starting ZED RGB camera..."
   setsid "$REPO_DIR/scripts/run_zed_rgb_camera.sh" >"$LOG_DIR/camera.log" 2>&1 &
   CAMERA_PID=$!
+  wait_for_topic /zed2i/image_raw/compressed \
+    || die "Camera stream did not come up; see $LOG_DIR/camera.log"
 fi
 
 if [ "$RECORD" = "true" ]; then
   say "Starting demo recording..."
-  ROBOT_SN="$ROBOT_SN" setsid "$REPO_DIR/scripts/record_demo.sh" >"$LOG_DIR/record.log" 2>&1 &
+  # Without --camera there is no image stream to record; in fake mode the
+  # robot-state topics legitimately do not exist (fake hardware publishes no
+  # RDK states), so let record_demo.sh proceed past its topic check for them.
+  record_env=(ROBOT_SN="$ROBOT_SN")
+  [ "$CAMERA" = "true" ] || record_env+=(CAMERA_MODE=none)
+  [ "$MODE" = "fake" ] && record_env+=(ALLOW_MISSING_TOPICS=true)
+  env "${record_env[@]}" setsid "$REPO_DIR/scripts/record_demo.sh" >"$LOG_DIR/record.log" 2>&1 &
   RECORD_PID=$!
+  sleep 3
+  if ! group_alive "$RECORD_PID"; then
+    echo "----- $LOG_DIR/record.log -----" >&2
+    tail -n 20 "$LOG_DIR/record.log" >&2 || true
+    die "Demo recording failed to start; see $LOG_DIR/record.log"
+  fi
 fi
 
-# ------------------------------------------------------------------- bridge
+# ------------------------------------------------------------------- live
 say "Teleoperation is live."
 say "  HOLD button 0 (left) as the deadman to move the arm."
 [ "$GRIPPER" = "true" ] && say "  PRESS button 1 (right) to toggle the gripper."
+[ "$RECORD" = "true" ] && say "  Recording to ~/teleop_demos/ (see $LOG_DIR/record.log)."
 say "  Ctrl-C stops teleop and shuts the whole stack down."
 echo
 
-setsid ros2 launch flexiv_spacemouse_teleop spacemouse_teleop.launch.py \
-  enable_gripper:="$GRIPPER" >"$LOG_DIR/bridge.log" 2>&1 &
-BRIDGE_PID=$!
 tail -f "$LOG_DIR/bridge.log" --pid="$BRIDGE_PID" &
 wait "$BRIDGE_PID"

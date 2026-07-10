@@ -11,6 +11,7 @@ import rclpy
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from rclpy.action import ActionClient
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectoryPoint
@@ -63,12 +64,18 @@ class JointStateReturner(Node):
         result_future = goal_handle.get_result_async()
         try:
             rclpy.spin_until_future_complete(self, result_future)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, ExternalShutdownException):
             # Without an explicit cancel the controller would keep executing
-            # the trajectory after this process exits.
+            # the trajectory after this process exits. SIGTERM surfaces as
+            # ExternalShutdownException, not KeyboardInterrupt.
             print("\nInterrupted: cancelling the return trajectory...", file=sys.stderr)
             cancel_future = goal_handle.cancel_goal_async()
             rclpy.spin_until_future_complete(self, cancel_future, timeout_sec=2.0)
+            if not cancel_future.done():
+                raise RuntimeError(
+                    "Return trajectory was interrupted; cancel request could not be "
+                    "confirmed — verify the arm stopped before approaching it"
+                )
             raise RuntimeError("Return trajectory was interrupted and cancelled")
         result = result_future.result()
         if result is None:

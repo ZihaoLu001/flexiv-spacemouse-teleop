@@ -67,6 +67,24 @@ audit is addressed, and teleoperation now starts with a single command.
   duplicates the Markdown docs (drift-prone); safety docs now document E-stop
   recovery and the return-to-start path assumptions.
 
+### Review follow-ups (post-verification adversarial review)
+- `teleop.sh --record` now starts recording only after the bridge (and camera,
+  with `--camera`) topics are up, records robot-only data without `--camera`
+  (`CAMERA_MODE=none`), tolerates the legitimately-absent RDK state topics in
+  fake mode, and fails loudly if the recorder dies (previously the recording
+  could exit silently before the bridge existed and a whole demo was lost).
+- `stop_ros_stack.sh` patterns are anchored to installed executable paths so
+  `pkill -f` can never hit an editor with a source file name on its command
+  line; `run_fake_moveit_servo.sh` gained the same existing-stack and
+  grav_tcp/LOAD_GRIPPER guards as the real script; the grav_tcp guards match
+  the effective `ee_frame_name` key instead of any comment mention.
+- `return_to_joint_state` also cancels on SIGTERM (ExternalShutdownException),
+  not just Ctrl-C, and reports when the cancel could not be confirmed.
+- `teleop.sh` cleanup no longer stalls 10 s with `--keep-stack`, waits on the
+  recorder/camera groups too, and `--help` no longer prints a code line.
+- Docs no longer recommend `--no-gripper` for first runs (it refuses to start
+  with the default grav_tcp Servo config, by design).
+
 ### Removed
 - `scripts/tune_flexiv_servo_smooth.sh` (replaced by
   `scripts/apply_servo_config.sh` + the version-controlled Servo config).

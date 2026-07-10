@@ -13,10 +13,13 @@ PATTERNS=(
   '/opt/ros/humble/lib/robot_state_publisher/robot_state_publisher'
   '/opt/ros/humble/lib/spacenav/spacenav_node'
   '/opt/ros/humble/lib/v4l2_camera/v4l2_camera_node'
-  'flexiv_gripper_node'
-  'spacemouse_to_servo'
-  'spacemouse_gn01'
+  'lib/flexiv_gripper/flexiv_gripper_node'
+  'lib/flexiv_spacemouse_teleop/spacemouse_to_servo'
+  'lib/flexiv_spacemouse_teleop/spacemouse_gn01'
 )
+# Patterns are anchored to installed executable paths so pkill -f can never
+# match an editor or pager that merely has a source file name on its command
+# line.
 
 any_alive() {
   for p in "${PATTERNS[@]}"; do

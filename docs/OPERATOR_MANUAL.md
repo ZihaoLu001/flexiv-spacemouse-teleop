@@ -74,17 +74,14 @@ cd ~/teleop_ws/src/flexiv-spacemouse-teleop
 ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real
 ```
 
-For the first real run, disable the gripper bridge and verify arm axes only:
-
-```bash
-ROBOT_SN=Rizon4s-062626 scripts/teleop.sh --real --no-gripper
-```
-
-Note: the repo-managed Servo config uses the `grav_tcp` end-effector frame,
-which only exists when the gripper **model** is loaded. `teleop.sh --no-gripper`
-will refuse to start in that case; either keep the gripper model (drop
-`--no-gripper`) or change `ee_frame_name` in
-`config/rizon_moveit_servo_config.lab.yaml`.
+For the first real run, verify the arm axes gently before using the gripper
+button. Note that `--no-gripper` does NOT work with the default configuration:
+the repo-managed Servo config uses the `grav_tcp` end-effector frame, which
+only exists when the gripper **model** is loaded, so `teleop.sh --no-gripper`
+refuses to start (by design). To run genuinely gripper-less hardware, change
+`ee_frame_name` in `config/rizon_moveit_servo_config.lab.yaml` back to the
+flange, rerun `scripts/apply_servo_config.sh`, and re-calibrate the `sign_*`
+values.
 
 Controls:
 
